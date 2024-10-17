@@ -44,6 +44,7 @@ StructCoalescent_mcmc <- function(N,
                                   adaptation_rate = 0.6, target_accept_rate = 0.234){
 
   ED <- as.ED(strphylo)
+  n_deme <- max(ED[,5])
 
   # Convert priors to rate-shape parameterisation from mode-variance
   cr_rate <- (cr_mode + sqrt(cr_mode^2 + 4 * cr_var))/(2 * cr_var)
@@ -110,9 +111,8 @@ StructCoalescent_mcmc <- function(N,
   if (save_migration_history){
     tree_file <- file.path(output_dir,
                            paste0(run_name, '.trees'))
-    treedata <- as.treedata(ED)
-
-    header <- capture.output(treeio::write.beast(treedata, file=stdout(), translate=TRUE, tree.name='STATE_0')) #Generate full .trees file for initial tree - need all except final "END;"
+    tree_data <- as.treedata(ED)
+    header <- capture.output(treeio::write.beast(tree_data, file=stdout(), translate=TRUE, tree.name='STATE_0')) #Generate full .trees file for initial tree - need all except final "END;"
     header[2] <- paste("[R-package StructCoalescent, ", date(), "]\n\n", sep = "") #Update package line of .trees file to scoal
     cat(header[-length(header)], file = tree_file, sep = "\n") #Save file with updated package line, omitting "END;" on final line
   }
@@ -193,7 +193,6 @@ StructCoalescent_mcmc <- function(N,
           coal_rate, #coal_rate
           as.vector(bit_mig_mat)[-(1 + 0:(n_deme - 1) * (n_deme + 1))], #Mig mat
           st_radius, #subtree radius (being adapted!)
-          #ED[n_leaf + 1:(n_leaf-1), 'Deme'], #Coalescent node demes
           file = log_file, sep =",", append = TRUE)
 
       # Update .freq file (Overwrites existing file entirely)
@@ -205,11 +204,9 @@ StructCoalescent_mcmc <- function(N,
 
     if (save_migration_history && (x %% migration_history_thin == 0)){
       # Write current tree to .trees file
-      phylo <- ed.to.phylo(ED)
-      treedata <- treeio::as.treedata(phylo)
-      treedata@data <- tidytree::tibble(type = paste0("\"", phylo$node.deme, "\""), node = 1:length(phylo$node.deme))
+      tree_data <- as.treedata(ED)
       cat("\tTREE STATE_", x, " = ",
-          treeio::write.beast.newick(treedata), "\n",
+          treeio::write.beast.newick(tree_data), "\n",
           file = tree_file, append = TRUE, sep = "")
     }
   }

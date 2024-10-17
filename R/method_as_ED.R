@@ -70,9 +70,9 @@ as.ED.strphylo <- function(strphylo){
               ED[migration_rows,])
 
   max_label <- max(ED[,1], na.rm=TRUE)
-  ED[,1:4] <- ED[,1:4] + max_label
+  ED[,-(5:6)] <- ED[,-(5:6)] + max_label
   for (i in 1 : n){#nrow(ED)){
-    ED[,1:4][ED[,1:4] == ED[i,1]] <- i
+    ED[,-(5:6)][ED[,-(5:6)] == ED[i,1]] <- i
   }
   class(ED) <- "ED"
   return(ED)

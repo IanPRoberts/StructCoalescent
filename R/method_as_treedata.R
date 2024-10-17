@@ -1,3 +1,4 @@
+#' @importFrom treeio as.treedata
 #' @export
 as.treedata.ED <- function(ED){
   strphylo <- as.strphylo(ED)
@@ -5,6 +6,7 @@ as.treedata.ED <- function(ED){
   return(treedata)
 }
 
+#' @importFrom treeio as.treedata
 #' @export
 as.treedata.strphylo <- function(strphylo){
   class(strphylo) <- 'phylo'
