@@ -17,9 +17,10 @@ StructCoalescent_mcmc(
   mm_var,
   output_dir,
   run_name = "StructCoalescent",
+  stdout_log = TRUE,
   thin = max(N/5000, 1),
-  save_trees = TRUE,
-  tree_thin = thin,
+  save_migration_history = TRUE,
+  migration_history_thin = thin,
   proposal_rates = c(1000, 1, 1),
   adaptation_rate = 0.6,
   target_accept_rate = 0.234
@@ -28,13 +29,15 @@ StructCoalescent_mcmc(
 \arguments{
 \item{N}{Total number of MCMC iterations to complete}
 
+\item{strphylo}{Initial structured phylogenetic tree}
+
 \item{coal_rate}{Initial estimate of coalescent rates}
 
 \item{bit_mig_mat}{Initial estimate of backward-in-time migration rates matrix}
 
-\item{st_radius}{Initial radius for subtrees}
+\item{st_radius}{Initial subtree radius}
 
-\item{adaptive}{Logical value indicating whether or not to adapt the radius within the run (default TRUE)}
+\item{adaptive}{(logical) Adaptively update subtree radius within run? (default TRUE)}
 
 \item{cr_mode}{Coalescent rates prior mode}
 
@@ -48,19 +51,19 @@ StructCoalescent_mcmc(
 
 \item{run_name}{Run name to save log files as}
 
+\item{stdout_log}{(logical) Output logs to stdout()? Default true}
+
 \item{thin}{Thinning rate for continuous parameter posterior samples}
 
-\item{save_trees}{Logical value indicating whether tree samples are saved (i.e. whether .trees file is created)}
+\item{save_migration_history}{Logical value indicating whether tree samples are saved (i.e. whether .trees file is created)}
 
-\item{tree_thin}{Thinning rate for tree samples to be saved}
+\item{migration_history_thin}{Thinning rate for tree samples to be saved}
 
 \item{proposal_rates}{Relative rates of migration history and continuous parameter updates (migration history : coalescent rates : migration rates)}
 
 \item{adaptation_rate}{Rate at which adaptive MCMC varies subtree radius (unused if adaptive = FALSE)}
 
 \item{target_accept_rate}{Target acceptance rate for migration history updates}
-
-\item{ED}{Migration history to begin at in ED format (9 columns)}
 }
 \description{
 Runs an MCMC chain using the StructCoalescent method using radius-based subtrees

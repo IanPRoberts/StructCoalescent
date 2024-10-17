@@ -12,38 +12,38 @@ Vaughan_2015_MultiTypeTree_mcmc <- function(){
 #' Runs an MCMC chain using the StructCoalescent method using radius-based subtrees
 #'
 #' @param N Total number of MCMC iterations to complete
-#' @param ED Migration history to begin at in ED format (9 columns)
+#' @param strphylo Initial structured phylogenetic tree
 #' @param coal_rate Initial estimate of coalescent rates
 #' @param bit_mig_mat Initial estimate of backward-in-time migration rates matrix
-#' @param st_radius Initial radius for subtrees
-#' @param adaptive Logical value indicating whether or not to adapt the radius within the run (default TRUE)
+#' @param st_radius Initial subtree radius
+#' @param adaptive (logical) Adaptively update subtree radius within run? (default TRUE)
 #' @param cr_mode Coalescent rates prior mode
 #' @param cr_var Coalescent rates prior variance
 #' @param mm_mode Backward-in-time migration rates prior mode
 #' @param mm_var Backward-in-time migration rates prior variance
+#' @param output_dir Directory to output log files to
+#' @param run_name Run name to save log files as
+#' @param stdout_log (logical) Output logs to stdout()? Default true
 #' @param thin Thinning rate for continuous parameter posterior samples
-#' @param save_trees Logical value indicating whether tree samples are saved (i.e. whether .trees file is created)
-#' @param tree_thin Thinning rate for tree samples to be saved
+#' @param save_migration_history Logical value indicating whether tree samples are saved (i.e. whether .trees file is created)
+#' @param migration_history_thin Thinning rate for tree samples to be saved
 #' @param proposal_rates Relative rates of migration history and continuous parameter updates (migration history : coalescent rates : migration rates)
 #' @param adaptation_rate Rate at which adaptive MCMC varies subtree radius (unused if adaptive = FALSE)
 #' @param target_accept_rate Target acceptance rate for migration history updates
-#' @param output_dir Directory to output log files to
-#' @param run_name Run name to save log files as
 #'
 #' @export
 
-StructCoalescent_mcmc <- function(N, strphylo,
-                                  coal_rate, bit_mig_mat,
+StructCoalescent_mcmc <- function(N,
+                                  strphylo, coal_rate, bit_mig_mat,
                                   st_radius, adaptive = TRUE,
                                   cr_mode, cr_var,
                                   mm_mode, mm_var,
-                                  output_dir, run_name = 'StructCoalescent',
-                                  thin = max(N/5e3, 1), save_trees = TRUE, tree_thin = thin,
+                                  output_dir, run_name = 'StructCoalescent', stdout_log = TRUE,
+                                  thin = max(N/5e3, 1), save_migration_history = TRUE, migration_history_thin = thin,
                                   proposal_rates=c(1e3, 1, 1),
                                   adaptation_rate = 0.6, target_accept_rate = 0.234){
 
   ED <- as.ED(strphylo)
-
 
   # Convert priors to rate-shape parameterisation from mode-variance
   cr_rate <- (cr_mode + sqrt(cr_mode^2 + 4 * cr_var))/(2 * cr_var)
@@ -96,7 +96,6 @@ StructCoalescent_mcmc <- function(N, strphylo,
       paste("coal_rate_", 1:n_deme, sep = "", collapse =","),
       paste("backward_migration_rate_", as.vector(outer(1:n_deme, 1:n_deme, paste, sep = "_")[-(1 + 0:(n_deme - 1) * (n_deme + 1))]), sep = ""),
       "st_radius",
-      #paste0("coal_node_", 1:(n_leaf-1)),
       file = log_file, sep =",")
 
   cat(paste0("\n", 0), #sample
@@ -105,19 +104,16 @@ StructCoalescent_mcmc <- function(N, strphylo,
       coal_rate, #coal_rate
       as.vector(bit_mig_mat)[-(1 + 0:(n_deme - 1) * (n_deme + 1))], #backward_migration_rate
       st_radius, #Subtree radius
-      #ED[n_leaf + 1:(n_leaf-1), 'Deme'], #Coalescent node demes
       file = log_file, sep =",", append = TRUE)
 
   # Set up .trees file to store posterior sampled trees
-  if (save_trees){
+  if (save_migration_history){
     tree_file <- file.path(output_dir,
                            paste0(run_name, '.trees'))
-    phylo <- ed.to.phylo(ED)
-    treedata <- treeio::as.treedata(phylo)
-    treedata@data <- tidytree::tibble(type = paste0("\"", phylo$node.deme, "\""), node = 1:length(phylo$node.deme))
+    treedata <- as.treedata(ED)
 
-    header <- capture.output(write.beast(treedata, file=stdout(), translate=TRUE, tree.name='STATE_0')) #Generate full .trees file for initial tree - need all except final "END;"
-    header[2] <- paste("[R-package scoal, ", date(), "]\n\n", sep = "") #Update package line of .trees file to scoal
+    header <- capture.output(treeio::write.beast(treedata, file=stdout(), translate=TRUE, tree.name='STATE_0')) #Generate full .trees file for initial tree - need all except final "END;"
+    header[2] <- paste("[R-package StructCoalescent, ", date(), "]\n\n", sep = "") #Update package line of .trees file to scoal
     cat(header[-length(header)], file = tree_file, sep = "\n") #Save file with updated package line, omitting "END;" on final line
   }
 
@@ -207,7 +203,7 @@ StructCoalescent_mcmc <- function(N, strphylo,
                   col.names = TRUE)
     }
 
-    if (save_trees && (x %% tree_thin == 0)){
+    if (save_migration_history && (x %% migration_history_thin == 0)){
       # Write current tree to .trees file
       phylo <- ed.to.phylo(ED)
       treedata <- treeio::as.treedata(phylo)
