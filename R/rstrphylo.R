@@ -17,15 +17,15 @@ rstrphylo <- function(n, d, tip_data=cbind(1:n,0,rep_len(1:d,n)), coalescent_rat
   tip_order <- order(tip_data[,2], decreasing = TRUE)
   tip_data <- tip_data[tip_order,]
 
-  ED <- cbind('Node ID'=1:n,
+  ED <- cbind('Node_ID'=1:n,
               'Parent'=NA,
-              'Child 1'=NA,
-              'Child 2'=NA,
+              'Child_1'=NA,
+              'Child_2'=NA,
               'Deme'=tip_data[,3],
-              'Node age'=tip_data[,2],
-              'Parent coal'=NA,
-              'Child coal 1'=NA,
-              'Child coal 2'=NA)
+              'Node_age'=tip_data[,2],
+              'Parent_coal'=NA,
+              'Child_coal_1'=NA,
+              'Child_coal_2'=NA)
 
   t <- ED[1, 6]
   node_ID <- n+1 #Next node ID, reserving n+1 for root

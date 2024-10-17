@@ -1,12 +1,10 @@
-as.strphylo <- function (x, ...)
-{
+as.strphylo <- function (x, ...){
   if (identical(class(x), "strphylo")) return(x)
   UseMethod("as.strphylo")
 }
 
 #' @export
-as.strphylo.default <- function(x, ...)
-{
+as.strphylo.default <- function(x, ...){
   if (inherits(x, "strphylo")) return(x)
   stop('Object does not inherit the class "strphylo": found no appropriate method to convert it')
 }

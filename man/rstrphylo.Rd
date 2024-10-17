@@ -8,8 +8,9 @@ rstrphylo(
   n,
   d,
   tip_data = cbind(1:n, 0, rep_len(1:d, n)),
-  coalescent_rates,
-  migration_matrix
+  coalescent_rates = 1/effective_population_sizes,
+  migration_matrix,
+  effective_population_sizes = 1/coalescent_rates
 )
 }
 \arguments{
