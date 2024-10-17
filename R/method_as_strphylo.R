@@ -58,3 +58,12 @@ as.strphylo.phylo <- function(phylo, node.deme){
   class(phylo) <- c('strphylo', 'phylo')
   return(phylo)
 }
+
+#' @export
+as.strphylo.treedata <- function(treedata){
+  if (suppressWarnings(is.null(treedata@data$type))) stop('Object does not inherit the class "strphylo": treedata does not contain "type" information')
+  strphylo <- treedata@phylo
+  strphylo$node.deme <- unname(treedata@data$type[order(as.numeric(treedata@data$node))])
+  class(strphylo) <- c('strphylo', 'phylo')
+  return(strphylo)
+}
