@@ -14,6 +14,78 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// DTALikelihoodC
+List DTALikelihoodC(NumericMatrix ED, NumericMatrix fit_mig_mat, NumericVector node_indices);
+static SEXP _StructCoalescent_DTALikelihoodC_try(SEXP EDSEXP, SEXP fit_mig_matSEXP, SEXP node_indicesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type ED(EDSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type fit_mig_mat(fit_mig_matSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type node_indices(node_indicesSEXP);
+    rcpp_result_gen = Rcpp::wrap(DTALikelihoodC(ED, fit_mig_mat, node_indices));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _StructCoalescent_DTALikelihoodC(SEXP EDSEXP, SEXP fit_mig_matSEXP, SEXP node_indicesSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_StructCoalescent_DTALikelihoodC_try(EDSEXP, fit_mig_matSEXP, node_indicesSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
+// DemeDecompC
+List DemeDecompC(NumericMatrix ED, int n_deme, NumericVector node_indices);
+static SEXP _StructCoalescent_DemeDecompC_try(SEXP EDSEXP, SEXP n_demeSEXP, SEXP node_indicesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type ED(EDSEXP);
+    Rcpp::traits::input_parameter< int >::type n_deme(n_demeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type node_indices(node_indicesSEXP);
+    rcpp_result_gen = Rcpp::wrap(DemeDecompC(ED, n_deme, node_indices));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _StructCoalescent_DemeDecompC(SEXP EDSEXP, SEXP n_demeSEXP, SEXP node_indicesSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_StructCoalescent_DemeDecompC_try(EDSEXP, n_demeSEXP, node_indicesSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 // FitMigMatC
 NumericMatrix FitMigMatC(NumericMatrix bit_mm, NumericVector coal_rate);
 static SEXP _StructCoalescent_FitMigMatC_try(SEXP bit_mmSEXP, SEXP coal_rateSEXP) {
@@ -65,6 +137,42 @@ RcppExport SEXP _StructCoalescent_BitMigMatC(SEXP fit_mmSEXP, SEXP coal_rateSEXP
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
         rcpp_result_gen = PROTECT(_StructCoalescent_BitMigMatC_try(fit_mmSEXP, coal_rateSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
+// NodeCountC
+List NodeCountC(NumericMatrix ED, int n_deme, NumericVector node_indices);
+static SEXP _StructCoalescent_NodeCountC_try(SEXP EDSEXP, SEXP n_demeSEXP, SEXP node_indicesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type ED(EDSEXP);
+    Rcpp::traits::input_parameter< int >::type n_deme(n_demeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type node_indices(node_indicesSEXP);
+    rcpp_result_gen = Rcpp::wrap(NodeCountC(ED, n_deme, node_indices));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _StructCoalescent_NodeCountC(SEXP EDSEXP, SEXP n_demeSEXP, SEXP node_indicesSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_StructCoalescent_NodeCountC_try(EDSEXP, n_demeSEXP, node_indicesSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -160,8 +268,11 @@ RcppExport SEXP _StructCoalescent_SC_like_C(SEXP EDSEXP, SEXP coal_rateSEXP, SEX
 static int _StructCoalescent_RcppExport_validate(const char* sig) { 
     static std::set<std::string> signatures;
     if (signatures.empty()) {
+        signatures.insert("List(*DTALikelihoodC)(NumericMatrix,NumericMatrix,NumericVector)");
+        signatures.insert("List(*DemeDecompC)(NumericMatrix,int,NumericVector)");
         signatures.insert("NumericMatrix(*FitMigMatC)(NumericMatrix,NumericVector)");
         signatures.insert("NumericMatrix(*BitMigMatC)(NumericMatrix,NumericVector)");
+        signatures.insert("List(*NodeCountC)(NumericMatrix,int,NumericVector)");
         signatures.insert("NumericVector(*NodeIndicesC)(NumericMatrix)");
         signatures.insert("double(*SC_like_C)(NumericMatrix,NumericVector,NumericMatrix,NumericVector)");
     }
@@ -170,8 +281,11 @@ static int _StructCoalescent_RcppExport_validate(const char* sig) {
 
 // registerCCallable (register entry points for exported C++ functions)
 RcppExport SEXP _StructCoalescent_RcppExport_registerCCallable() { 
+    R_RegisterCCallable("StructCoalescent", "_StructCoalescent_DTALikelihoodC", (DL_FUNC)_StructCoalescent_DTALikelihoodC_try);
+    R_RegisterCCallable("StructCoalescent", "_StructCoalescent_DemeDecompC", (DL_FUNC)_StructCoalescent_DemeDecompC_try);
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_FitMigMatC", (DL_FUNC)_StructCoalescent_FitMigMatC_try);
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_BitMigMatC", (DL_FUNC)_StructCoalescent_BitMigMatC_try);
+    R_RegisterCCallable("StructCoalescent", "_StructCoalescent_NodeCountC", (DL_FUNC)_StructCoalescent_NodeCountC_try);
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_NodeIndicesC", (DL_FUNC)_StructCoalescent_NodeIndicesC_try);
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_SC_like_C", (DL_FUNC)_StructCoalescent_SC_like_C_try);
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_RcppExport_validate", (DL_FUNC)_StructCoalescent_RcppExport_validate);
@@ -179,8 +293,11 @@ RcppExport SEXP _StructCoalescent_RcppExport_registerCCallable() {
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_StructCoalescent_DTALikelihoodC", (DL_FUNC) &_StructCoalescent_DTALikelihoodC, 3},
+    {"_StructCoalescent_DemeDecompC", (DL_FUNC) &_StructCoalescent_DemeDecompC, 3},
     {"_StructCoalescent_FitMigMatC", (DL_FUNC) &_StructCoalescent_FitMigMatC, 2},
     {"_StructCoalescent_BitMigMatC", (DL_FUNC) &_StructCoalescent_BitMigMatC, 2},
+    {"_StructCoalescent_NodeCountC", (DL_FUNC) &_StructCoalescent_NodeCountC, 3},
     {"_StructCoalescent_NodeIndicesC", (DL_FUNC) &_StructCoalescent_NodeIndicesC, 1},
     {"_StructCoalescent_SC_like_C", (DL_FUNC) &_StructCoalescent_SC_like_C, 4},
     {"_StructCoalescent_RcppExport_registerCCallable", (DL_FUNC) &_StructCoalescent_RcppExport_registerCCallable, 0},

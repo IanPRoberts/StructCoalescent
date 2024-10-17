@@ -106,7 +106,7 @@ DTA_sampling <- function(strphylo, fit_mig_mat, N = 1, parallel = FALSE, mc.core
         }
       }
     }
-    return(proposal)
+    return(as.strphylo(proposal))
   }
 
   if (parallel){
@@ -117,130 +117,24 @@ DTA_sampling <- function(strphylo, fit_mig_mat, N = 1, parallel = FALSE, mc.core
   return(proposals)
 }
 
+#' Local DTA
+#'
+#' Updates the migration history on a subtree under the DTA model
+#'
+#'
+#' @param ED ED representation of entire structured phylogenetic tree including virtual migrations needed to isolate subtree
+#' @param st_labels ED representation of subtree only
+#' @param fit_rates Forwards-in-time migration rates matrix
+#' @param node_indices Vector of node indices. Element i gives the row of label i
+#' @param eigen_decomp Eigendecomposition of fit_rates (output from eigen(fit_rates))
+#' @param inverse_vecs Inverse of matrix of eigenvectors (output from solve(eigen(fit_rates)$vectors))
+#'
+#' @return List of proposed DTA migration histories with the same leaves as input ED
 
-# EED_local_DTA_eigen <- function(EED, fit_rates, node_indices, eigen_vals = NULL, eigen_vecs = NULL, inverse_vecs = NULL, selected_node = NULL){
-#   if (is.null(selected_node)) selected_node <- sample(EED[!is.na(EED[,4]),1], 1)
-#
-#   if (is.null(eigen_vals) || is.null(eigen_vecs)){
-#     eigen_decomp <- eigen(fit_rates)
-#     eigen_vals <- eigen_decomp$values
-#     eigen_vecs <- eigen_decomp$vectors
-#     inverse_vecs <- solve(eigen_vecs)
-#   }
-#
-#   if (is.null(inverse_vecs)) inverse_vecs <- solve(eigen_vecs)
-#
-#   selected_row <- node_indices[selected_node]
-#
-#   child_nodes <- EED[selected_row, 8:9]
-#   parent_nodes <- rep(selected_node, 2)
-#   n_edge <- 2
-#
-#   if (!is.na(EED[selected_row, 7])){ #If selected_node is not the root
-#     child_nodes <- append(child_nodes, selected_node)
-#     parent_nodes <- append(parent_nodes, EED[selected_row, 7])
-#     n_edge <- 3
-#   }
-#
-#   child_rows <- node_indices[child_nodes]
-#   parent_rows <- node_indices[parent_nodes]
-#   edge_lengths <- EED[child_rows, 6] - EED[parent_rows, 6]
-#
-#   trans_mats <- lapply(edge_lengths, function(edge_length){
-#     eigen_vecs %*% diag(exp(edge_length * eigen_vals)) %*% inverse_vecs
-#   })
-#
-#   n_deme <- nrow(fit_rates)
-#
-#   node_dist <- rep(1, n_deme)
-#   for (x in 1 : 2){
-#     node_dist <- node_dist * trans_mats[[x]][, EED[child_rows[x], 5]]
-#   }
-#
-#   if (n_edge == 3){
-#     node_dist <- node_dist * trans_mats[[3]][EED[parent_rows[3], 5], ]
-#   }
-#   node_dist <- node_dist / sum(node_dist)
-#
-#   ################################################################################
-#   prop <- EED
-#   prop[selected_row, 5] <- sample.int(n_deme, 1, prob = node_dist) #Update deme at selected node
-#
-#   # Rows to remove from proposal
-#   # Any row which has exactly one of child_nodes
-#   # (only node with exactly 2 is selected_node)
-#   rm_rows <- which(xor(prop[,8] %in% child_nodes,
-#                        prop[,9] %in% child_nodes))
-#
-#   if (!is.na(prop[selected_row, 7])){ #Remove parent(selected_node) from rm_rows
-#     rm_rows <- rm_rows[prop[rm_rows, 1] != prop[selected_row, 7]]
-#   }
-#
-#   child_demes <- prop[child_rows, 5]
-#   child_times <- prop[child_rows, 6]
-#   parent_demes <- prop[parent_rows, 5]
-#   parent_times <- prop[parent_rows, 6]
-#
-#   max_label <- max(prop[,1])
-#
-#   for (x in 1 : n_edge){
-#     #Provide eigendecomposition to sample_path function
-#     mig_path <- ECctmc::sample_path(a = parent_demes[x],
-#                                     b = child_demes[x],
-#                                     t0 = parent_times[x],
-#                                     t1 = child_times[x],
-#                                     Q = fit_rates,
-#                                     eigen_vals = eigen_vals,
-#                                     eigen_vecs = eigen_vecs,
-#                                     inverse_vecs = inverse_vecs)
-#     n_mig <- nrow(mig_path) - 2 #Number of migration events to add
-#
-#     if (n_mig == 0){
-#       # If no migrations between parent and child, still (might) need to update parent/child
-#       prop[child_rows[x], 2] <- parent_nodes[x]
-#       which_child <- which(prop[parent_rows[x], 8:9] == child_nodes[x])
-#       prop[parent_rows[x], 2 + which_child] <- child_nodes[x]
-#     } else {
-#       # Add migrations if n_mig > 0
-#       add_rows <- cbind(
-#         max_label + 1:n_mig, #Node ID
-#         max_label + 1:n_mig - 1, #Parent
-#         max_label + 1:n_mig + 1, #Child 1
-#         NA, #Child 2
-#         mig_path[1:n_mig,2], # Deme
-#         mig_path[1 + 1:n_mig,1], #Node Age
-#         parent_nodes[x], #Parent coal
-#         child_nodes[x], #Child coal 1
-#         NA #Child coal 2
-#       )
-#
-#       # Update first and final to have child/parent_nodes[x] in correct place
-#       add_rows[1, 2] <- parent_nodes[x]
-#       add_rows[n_mig, 3] <- child_nodes[x]
-#
-#       prop <- rbind(prop, add_rows)
-#
-#       # Update child/parent_nodes[x]
-#       prop[child_rows[x], 2] <- max_label + n_mig
-#       which_child <- which(prop[parent_rows[x], 8:9] == child_rows[x])
-#       prop[parent_rows[x], 2 + which_child] <- max_label + 1
-#     }
-#     # Update max_label
-#     max_label <- max_label + n_mig
-#   }
-#
-#   if (length(rm_rows) > 0) prop <- prop[-rm_rows,]
-#   return(list(proposal = prop, updated_node = selected_node, node_dist = node_dist))
-# }
-
-
-
-local_DTA_subtree_proposal <- function(EED, st_labels, fit_rates, node_indices = NodeIndicesC(EED), eigen_decomp = eigen(fit_rates), inverse_vecs = solve(eigen_decomp$vectors)){
-  n_deme <- nrow(fit_rates)
-
+local_DTA_subtree_proposal <- function(ED, st_labels, fit_rates, n_deme=nrow(fit_rates), node_indices = NodeIndicesC(ED), eigen_decomp = eigen(fit_rates), inverse_vecs = solve(eigen_decomp$vectors)){
   #Identify migrations with child and parent inside subtree
   st_rm_rows <- is.na(st_labels[,4]) & (st_labels[,2] %in% st_labels[,1]) & (st_labels[,3] %in% st_labels[,1])
-  EED_rm_rows <- node_indices[st_labels[st_rm_rows, 1]]
+  ED_rm_rows <- node_indices[st_labels[st_rm_rows, 1]]
 
   #Remove migrations from inside st_labels
   st_labels <- st_labels[!st_rm_rows,]
@@ -255,30 +149,30 @@ local_DTA_subtree_proposal <- function(EED, st_labels, fit_rates, node_indices =
 
 
   n_nodes <- nrow(st_labels)
-  st_root <- st_labels[n_nodes,1] #Label of st_root -> node with least node age
+  st_root <- st_labels[n_nodes,1] #Label of st_root is node with least node age
   st_root_row <- node_indices[st_root]
 
   #Parent coal nodes within subtree
-  st_parent_labels <- EED[st_rows, 7]
+  st_parent_labels <- ED[st_rows, 7]
   st_parent_labels[st_parent_labels == st_parent_labels[n_nodes]] <- st_root
   st_parent_labels[n_nodes] <- st_root #In case st_root is global root
   st_parent_rows <- node_indices[st_parent_labels]
-  st_edge_lengths <- EED[st_rows, 6] - EED[st_parent_rows, 6]
+  st_edge_lengths <- ED[st_rows, 6] - ED[st_parent_rows, 6]
   st_edge_lengths[is.na(st_edge_lengths)] <- 0
 
 
   #Child coal nodes within subtree
-  st_children <- matrix(NA, n_nodes, 2) #unname(EED[st_rows, 8:9])
+  st_children <- matrix(NA, n_nodes, 2) #unname(ED[st_rows, 8:9])
   st_child_rows <- matrix(NA, n_nodes, 2) #matrix(node_indices[st_children], ncol = 2)
 
   for (st_id in 1 : n_nodes){
     for (child_id in 1 : 2){
-      child_label <- EED[st_rows[st_id], 7 + child_id]
+      child_label <- ED[st_rows[st_id], 7 + child_id]
       child_row <- node_indices[child_label]
 
       if (!is.na(child_row)){
         while (!(child_label %in% st_labels[,1])){
-          child_label <- EED[child_row, 2]
+          child_label <- ED[child_row, 2]
           child_row <- node_indices[child_label]
         }
       }
@@ -305,9 +199,9 @@ local_DTA_subtree_proposal <- function(EED, st_labels, fit_rates, node_indices =
   for (st_id in 1 : (n_nodes - 1)){ #Skip subtree root (st_root corresponds to st_id == n_nodes)
     node_row <- st_rows[st_id]
 
-    if ((is.na(st_labels[st_id, 3])) || st_children[st_id, 1] == EED[node_row, 1]){
+    if ((is.na(st_labels[st_id, 3])) || st_children[st_id, 1] == ED[node_row, 1]){
       # Subtree leaf node contributes column of transition matrix ending at current deme
-      current_deme <- EED[node_row, 5]
+      current_deme <- ED[node_row, 5]
       messages[st_id, st_parent_ids[st_id], ] <- trans_mats[, current_deme, st_id]
     } else {
       # Other subtree nodes contribute transition matrix %*% incoming messages
@@ -323,27 +217,27 @@ local_DTA_subtree_proposal <- function(EED, st_labels, fit_rates, node_indices =
   #When st_root is global root (a.s. the only situation where st_root may be coalescent node)
   #Need to sample deme at st_root as well as internal node!
 
-  if (is.na(EED[st_rows[n_nodes], 2])){ #st_root == global_root
+  if (is.na(ED[st_rows[n_nodes], 2])){ #st_root == global_root
     #Deme distribution just product of incoming messages from below
     node_dist <- messages[st_child_ids[n_nodes, 1], n_nodes,] * messages[st_child_ids[n_nodes, 2], n_nodes,]
-    EED[st_root_row, 5] <- sample.int(n_deme, 1, prob = node_dist)
+    ED[st_root_row, 5] <- sample.int(n_deme, 1, prob = node_dist)
   }
 
   for (st_id in (n_nodes - 1):1){ #Loop over non-subtree-leaf coalescent nodes
     node_row <- st_rows[st_id]
     if ((!is.na(st_child_rows[st_id, 1])) && (st_child_rows[st_id, 1] != node_row)){
-      parent_deme <- EED[st_parent_rows[st_id], 5]
+      parent_deme <- ED[st_parent_rows[st_id], 5]
 
       #Deme distribution is product of transition from determined parent with product of backwards messages from node's children
       node_dist <- trans_mats[parent_deme,,st_id] * messages[st_child_ids[st_id,1], st_id,] * messages[st_child_ids[st_id,2], st_id,]
-      EED[node_row, 5] <- sample.int(n_deme, 1, prob = node_dist)
+      ED[node_row, 5] <- sample.int(n_deme, 1, prob = node_dist)
     }
   }
 
   ##################
   # Subtree update #
   ##################
-  max_label <- max(EED[,1])
+  max_label <- max(ED[,1])
   log_like <- 0 #Proposal log likelihood
 
   #Fill in parent edge of each node in st_labels except st_root
@@ -351,11 +245,11 @@ local_DTA_subtree_proposal <- function(EED, st_labels, fit_rates, node_indices =
     node_row <- st_rows[st_id]
     node_label <- st_labels[st_id]
 
-    parent_deme <- EED[st_parent_rows[st_id], 5]
-    parent_time <- EED[st_parent_rows[st_id], 6]
+    parent_deme <- ED[st_parent_rows[st_id], 5]
+    parent_time <- ED[st_parent_rows[st_id], 6]
 
-    # mig_path <- ECctmc::sample_path_unif(parent_deme, EED[node_row, 5], 0, st_edge_lengths[st_id], Q = fit_rates)
-    mig_path <- ECctmc::sample_path_unif3(parent_deme, EED[node_row, 5], 0, st_edge_lengths[st_id],
+    # mig_path <- ECctmc::sample_path_unif(parent_deme, ED[node_row, 5], 0, st_edge_lengths[st_id], Q = fit_rates)
+    mig_path <- ECctmc::sample_path_unif3(parent_deme, ED[node_row, 5], 0, st_edge_lengths[st_id],
                                           Q = fit_rates, P = trans_mats[,,st_id])
 
 
@@ -374,7 +268,7 @@ local_DTA_subtree_proposal <- function(EED, st_labels, fit_rates, node_indices =
     if (n_mig > 0){ #Add new migrations
       parent_node <- st_parent_labels[st_id]
 
-      EED[st_parent_rows[st_id], 2 + which_child] <- max_label + 1 #Update child of node_parent
+      ED[st_parent_rows[st_id], 2 + which_child] <- max_label + 1 #Update child of node_parent
       for (k in 1 : n_mig){
         #log-probability of holding time until next migration i -> j
         log_like <- log_like +
@@ -382,22 +276,22 @@ local_DTA_subtree_proposal <- function(EED, st_labels, fit_rates, node_indices =
           fit_rates[mig_path[k, 2], mig_path[k, 2]] * (mig_path[k+1, 1] - mig_path[k,1]) # - f_{i+} * (t_j - t_i)
 
         max_label <- max_label + 1
-        EED <- rbind(EED,
-                     c(max_label, #New migration ID
-                       parent_node,
-                       max_label + 1, NA, #Next migration ID
-                       mig_path[k, 2], #New migration deme
-                       parent_time + mig_path[k+1, 1], #Migration time increases leaf-wards
-                       EED[node_row, 7], #Maintain same coal node parent as node_row
-                       EED[st_parent_rows[st_id], 7 + which_child], NA))
+        ED <- rbind(ED,
+                    c(max_label, #New migration ID
+                      parent_node,
+                      max_label + 1, NA, #Next migration ID
+                      mig_path[k, 2], #New migration deme
+                      parent_time + mig_path[k+1, 1], #Migration time increases leaf-wards
+                      ED[node_row, 7], #Maintain same coal node parent as node_row
+                      ED[st_parent_rows[st_id], 7 + which_child], NA))
         parent_node <- max_label
-        node_indices[max_label] <- nrow(EED)
+        node_indices[max_label] <- nrow(ED)
       }
-      EED[nrow(EED), 3] <- node_label #Update child of final migration added
-      EED[node_row, 2] <- max_label #Update parent of current node
+      ED[nrow(ED), 3] <- node_label #Update child of final migration added
+      ED[node_row, 2] <- max_label #Update parent of current node
     } else{ #No migrations added
-      EED[node_row, 2] <- st_parent_labels[st_id] #Update parent of current node
-      EED[st_parent_rows[st_id], 2 + which_child] <- node_label #Update child of parent node
+      ED[node_row, 2] <- st_parent_labels[st_id] #Update parent of current node
+      ED[st_parent_rows[st_id], 2 + which_child] <- node_label #Update child of parent node
     }
 
     #log-probability of no further migrations between last two events on mig_path
@@ -409,39 +303,39 @@ local_DTA_subtree_proposal <- function(EED, st_labels, fit_rates, node_indices =
   ############################
   # If st_root is a migration, it is a.s. self-migration
   # Else st_root is the global root and no change needs to be made
-  if (is.na(EED[st_root_row, 4])){
-    parent_node <- EED[st_root_row, 2]
+  if (is.na(ED[st_root_row, 4])){
+    parent_node <- ED[st_root_row, 2]
     parent_row <- node_indices[parent_node]
-    which_child <- which(EED[parent_row, 8:9] == EED[st_root_row, 8])
-    EED[parent_row, 2 + which_child] <- EED[st_root_row, 3] #Child of parent is now child of st_root
+    which_child <- which(ED[parent_row, 8:9] == ED[st_root_row, 8])
+    ED[parent_row, 2 + which_child] <- ED[st_root_row, 3] #Child of parent is now child of st_root
 
-    child_node <- EED[st_root_row, 3]
+    child_node <- ED[st_root_row, 3]
     child_row <- node_indices[child_node]
-    EED[child_row, 2] <- parent_node
+    ED[child_row, 2] <- parent_node
 
-    EED_rm_rows <- append(EED_rm_rows, st_root_row)
+    ED_rm_rows <- append(ED_rm_rows, st_root_row)
   }
 
   for (st_id in 1 : (n_nodes - 1)){
     current_row <- st_rows[st_id]
 
-    if ((is.na(EED[current_row, 4])) & (!is.na(EED[current_row, 3]))){ #If current_row is migration then a.s. self-migration
-      child_node <- EED[current_row, 3]
+    if ((is.na(ED[current_row, 4])) & (!is.na(ED[current_row, 3]))){ #If current_row is migration then a.s. self-migration
+      child_node <- ED[current_row, 3]
       child_row <- node_indices[child_node]
-      EED[child_row, 2] <- EED[current_row, 2] #Parent of child_node is parent(current_st_leaf)
+      ED[child_row, 2] <- ED[current_row, 2] #Parent of child_node is parent(current_st_leaf)
 
-      parent_node <- EED[current_row, 2]
+      parent_node <- ED[current_row, 2]
       parent_row <- node_indices[parent_node]
-      which_child <- which(EED[parent_row, 3:4] == st_labels[st_id, 1])
-      EED[parent_row, 2 + which_child] <- child_node
+      which_child <- which(ED[parent_row, 3:4] == st_labels[st_id, 1])
+      ED[parent_row, 2 + which_child] <- child_node
 
-      EED_rm_rows <- append(EED_rm_rows, current_row)
+      ED_rm_rows <- append(ED_rm_rows, current_row)
     }
   }
 
-  EED <- EED[-EED_rm_rows,]
+  ED <- ED[-ED_rm_rows,]
 
-  return(list(proposal=EED, prop_prob = log_like))
+  return(list(proposal=structure(ED, class='ED'), prop_prob = log_like))
 }
 
 
@@ -596,5 +490,5 @@ st_centre_dist <- function(ED, st_radius, NI, st_child = NA, st_centre_loc = run
     }
   }
 
-  return(list(ED = ED, st_labels = ED[NI[st_labels[,1]],]))
+  return(list(ED = structure(ED, class='ED'), st_labels = structure(ED[NI[st_labels[,1]],], class='ED')))
 }

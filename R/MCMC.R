@@ -122,7 +122,7 @@ StructCoalescent_mcmc <- function(N,
 
     if (move_id == 1){
       subtree <- st_centre_dist(ED, st_radius, ED_NI)
-      proposal <- local_DTA_subtree_proposal(subtree$EED, subtree$st_labels, fit_rates,
+      proposal <- local_DTA_subtree_proposal(subtree$ED, subtree$st_labels, fit_rates,
                                              eigen_decomp = eigen_decomp, inverse_vecs = inverse_vecs)
       prop <- proposal$proposal
 
@@ -153,10 +153,10 @@ StructCoalescent_mcmc <- function(N,
       }
     } else {
       if (move_id == 2){
-        coal_rate <- scaled_coal_rate_gibbs_update(ED, 1, n_deme, ED_NI, cr_shape, cr_rate)
+        coal_rate <- ED_cr_gibbs(ED, n_deme, ED_NI, cr_shape, cr_rate)
         cr_prior <- sum(dgamma(coal_rate, cr_shape, cr_rate, log = TRUE))
       } else if (move_id == 3){
-        bit_mig_mat <- scaled_mig_mat_gibbs_update(ED, 1, n_deme, ED_NI, mm_shape, mm_rate)
+        bit_mig_mat <- ED_bmm_gibbs(ED, n_deme, ED_NI, mm_shape, mm_rate)
         mm_prior <- sum(dgamma(bit_mig_mat, mm_shape, mm_rate, log = TRUE)[-(1 + 0:(n_deme - 1) * (n_deme + 1))])
       }
 

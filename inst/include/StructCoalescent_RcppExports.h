@@ -25,6 +25,48 @@ namespace StructCoalescent {
         }
     }
 
+    inline List DTALikelihoodC(NumericMatrix ED, NumericMatrix fit_mig_mat, NumericVector node_indices) {
+        typedef SEXP(*Ptr_DTALikelihoodC)(SEXP,SEXP,SEXP);
+        static Ptr_DTALikelihoodC p_DTALikelihoodC = NULL;
+        if (p_DTALikelihoodC == NULL) {
+            validateSignature("List(*DTALikelihoodC)(NumericMatrix,NumericMatrix,NumericVector)");
+            p_DTALikelihoodC = (Ptr_DTALikelihoodC)R_GetCCallable("StructCoalescent", "_StructCoalescent_DTALikelihoodC");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_DTALikelihoodC(Shield<SEXP>(Rcpp::wrap(ED)), Shield<SEXP>(Rcpp::wrap(fit_mig_mat)), Shield<SEXP>(Rcpp::wrap(node_indices)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<List >(rcpp_result_gen);
+    }
+
+    inline List DemeDecompC(NumericMatrix ED, int n_deme, NumericVector node_indices) {
+        typedef SEXP(*Ptr_DemeDecompC)(SEXP,SEXP,SEXP);
+        static Ptr_DemeDecompC p_DemeDecompC = NULL;
+        if (p_DemeDecompC == NULL) {
+            validateSignature("List(*DemeDecompC)(NumericMatrix,int,NumericVector)");
+            p_DemeDecompC = (Ptr_DemeDecompC)R_GetCCallable("StructCoalescent", "_StructCoalescent_DemeDecompC");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_DemeDecompC(Shield<SEXP>(Rcpp::wrap(ED)), Shield<SEXP>(Rcpp::wrap(n_deme)), Shield<SEXP>(Rcpp::wrap(node_indices)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<List >(rcpp_result_gen);
+    }
+
     inline NumericMatrix FitMigMatC(NumericMatrix bit_mm, NumericVector coal_rate) {
         typedef SEXP(*Ptr_FitMigMatC)(SEXP,SEXP);
         static Ptr_FitMigMatC p_FitMigMatC = NULL;
@@ -65,6 +107,27 @@ namespace StructCoalescent {
         if (rcpp_result_gen.inherits("try-error"))
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<NumericMatrix >(rcpp_result_gen);
+    }
+
+    inline List NodeCountC(NumericMatrix ED, int n_deme, NumericVector node_indices) {
+        typedef SEXP(*Ptr_NodeCountC)(SEXP,SEXP,SEXP);
+        static Ptr_NodeCountC p_NodeCountC = NULL;
+        if (p_NodeCountC == NULL) {
+            validateSignature("List(*NodeCountC)(NumericMatrix,int,NumericVector)");
+            p_NodeCountC = (Ptr_NodeCountC)R_GetCCallable("StructCoalescent", "_StructCoalescent_NodeCountC");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_NodeCountC(Shield<SEXP>(Rcpp::wrap(ED)), Shield<SEXP>(Rcpp::wrap(n_deme)), Shield<SEXP>(Rcpp::wrap(node_indices)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<List >(rcpp_result_gen);
     }
 
     inline NumericVector NodeIndicesC(NumericMatrix ED) {
