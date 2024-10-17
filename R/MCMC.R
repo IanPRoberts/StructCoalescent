@@ -177,7 +177,6 @@ StructCoalescent_mcmc <- function(N,
 
     freq[2, move_id] <- freq[2, move_id] + 1 # Increment proposal quantity for move_id
 
-
     if (x %% thin == 0){
       # Write iteration, likelihood, posterior and subtree radius to stdout()
       cat(x, # Sample
