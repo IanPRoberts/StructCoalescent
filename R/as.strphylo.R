@@ -47,7 +47,7 @@ as.strphylo.ED <- function(ED){
   phylo$Nnode <- n.nodes - n.tips
   phylo$node.deme <- ED[order(ED[,1]),5]  #Order supplies the ordering of the rows in ED to get node demes in correct order
 
-  phylo <- ladderize(phylo)
+  phylo <- ape::ladderize(phylo)
 
   return(phylo)
 }
