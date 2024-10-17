@@ -11,9 +11,18 @@
 #' @return Consensus migration history in ED format
 #'
 #' @export
-
 exact_consensus <- function(strphylo_list, consensus_prob=0.5, plot=TRUE, ...){
   ED_list <- lapply(strphylo_list, as.ED)
+  con_ED <- exact_consensus_ED(ED_list, consensus_prob)
+
+  if (plot){
+    plot(con_ED, ...)
+  }
+  return(as.strphylo(con_ED))
+}
+
+
+exact_consensus_ED <- function(ED_list, consensus_prob=0.5){
   n_deme <- max(sapply(ED_list, function(x) max(x[,5])))
   n_trees <- length(ED_list)
   NI_list <- lapply(ED_list, NodeIndicesC)
@@ -158,12 +167,5 @@ exact_consensus <- function(strphylo_list, consensus_prob=0.5, plot=TRUE, ...){
       }
     }
   }
-
-  class(con_ED) <- 'ED'
-
-  if (plot){
-    plot(con_ED, n_deme, TRUE, root_time = con_ED[is.na(con_ED[,2]), 6], ...)
-  }
-
-  return(as.strphylo(con_ED))
+  return(structure(con_ED, class='ED'))
 }

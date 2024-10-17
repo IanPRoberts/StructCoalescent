@@ -209,5 +209,5 @@ StructCoalescent_mcmc <- function(N,
           file = tree_file, append = TRUE, sep = "")
     }
   }
-  cat("END;", file = tree_file, append = TRUE, sep = "")
+  cat("END;\n", file = tree_file, append = TRUE, sep = "")
 }

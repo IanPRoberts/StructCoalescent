@@ -6,7 +6,12 @@ plot.strphylo <- function (strphylo, n_deme = NA, time_axis = FALSE, root_time =
   if (is.na(n_deme)) {
     n_deme <- max(strphylo$node.deme)
   }
-  # color.palette <- c(palette.colors(n_deme, palette = 'Polychrome 36'), "black")
+
+  # if (n_deme <= 7){
+  #   color.palette <- c(palette.colors(n_deme + 1, palette = 'R4')[-1], "black")
+  # } else {
+  #   color.palette <- c(palette.colors(n_deme, palette = 'Polychrome 36'), "black")
+  # }
   color.palette <- c(rainbow(n_deme), 'black')
   strphylo$node.deme[strphylo$node.deme == 0] <- n_deme + 1
   edge.color <- color.palette[strphylo$node.deme[edge[, 2]]]
