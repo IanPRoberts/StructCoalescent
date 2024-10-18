@@ -84,8 +84,8 @@ SC_like_C <- function(ED, coal_rate, bit_mig_mat, node_indices) {
 #' bookended by interval endpoints, and whose second column is the sequence of
 #' states
 #' @author Jon Fintzi (ECctmc-0.2.5)
-sample_path_unif3 <- function(a, b, t0, t1, Q, P) {
-    .Call('_StructCoalescent_sample_path_unif3', PACKAGE = 'StructCoalescent', a, b, t0, t1, Q, P)
+sample_path <- function(a, b, t0, t1, Q, P) {
+    .Call('_StructCoalescent_sample_path', PACKAGE = 'StructCoalescent', a, b, t0, t1, Q, P)
 }
 
 # Register entry points for exported C++ functions

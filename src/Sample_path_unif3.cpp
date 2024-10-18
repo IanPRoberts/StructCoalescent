@@ -23,7 +23,7 @@ using namespace Rcpp;
 //' @author Jon Fintzi (ECctmc-0.2.5)
 // [[Rcpp::export]]
 
-arma::mat sample_path_unif3(const int a, const int b, const double t0, const double t1, const arma::mat& Q, const arma::mat& P) {
+arma::mat sample_path(const int a, const int b, const double t0, const double t1, const arma::mat& Q, const arma::mat& P) {
 
   // Get the number of states and initialize vector of states
   int n_states = Q.n_rows;

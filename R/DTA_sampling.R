@@ -248,17 +248,8 @@ local_DTA_subtree_proposal <- function(ED, st_labels, fit_rates, n_deme=nrow(fit
     parent_time <- ED[st_parent_rows[st_id], 6]
 
     # mig_path <- ECctmc::sample_path_unif(parent_deme, ED[node_row, 5], 0, st_edge_lengths[st_id], Q = fit_rates)
-    mig_path <- ECctmc::sample_path_unif3(parent_deme, ED[node_row, 5], 0, st_edge_lengths[st_id],
+    mig_path <- sample_path(parent_deme, ED[node_row, 5], 0, st_edge_lengths[st_id],
                                           Q = fit_rates, P = trans_mats[,,st_id])
-
-
-    ###### ECctmc::sample_path_unif returns t(mig_path) if 0 migrations added
-    ###### BUG IN SOURCE CODE!!!
-    # if (nrow(mig_path) == ncol(mig_path)){
-    #   if (mig_path[1,2] == st_edge_lengths[st_id]){
-    #     mig_path <- t(mig_path)
-    #   }
-    # }
 
     n_mig <- nrow(mig_path) - 2
 

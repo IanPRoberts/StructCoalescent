@@ -172,17 +172,17 @@ namespace StructCoalescent {
         return Rcpp::as<double >(rcpp_result_gen);
     }
 
-    inline arma::mat sample_path_unif3(const int a, const int b, const double t0, const double t1, const arma::mat& Q, const arma::mat& P) {
-        typedef SEXP(*Ptr_sample_path_unif3)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
-        static Ptr_sample_path_unif3 p_sample_path_unif3 = NULL;
-        if (p_sample_path_unif3 == NULL) {
-            validateSignature("arma::mat(*sample_path_unif3)(const int,const int,const double,const double,const arma::mat&,const arma::mat&)");
-            p_sample_path_unif3 = (Ptr_sample_path_unif3)R_GetCCallable("StructCoalescent", "_StructCoalescent_sample_path_unif3");
+    inline arma::mat sample_path(const int a, const int b, const double t0, const double t1, const arma::mat& Q, const arma::mat& P) {
+        typedef SEXP(*Ptr_sample_path)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_sample_path p_sample_path = NULL;
+        if (p_sample_path == NULL) {
+            validateSignature("arma::mat(*sample_path)(const int,const int,const double,const double,const arma::mat&,const arma::mat&)");
+            p_sample_path = (Ptr_sample_path)R_GetCCallable("StructCoalescent", "_StructCoalescent_sample_path");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_sample_path_unif3(Shield<SEXP>(Rcpp::wrap(a)), Shield<SEXP>(Rcpp::wrap(b)), Shield<SEXP>(Rcpp::wrap(t0)), Shield<SEXP>(Rcpp::wrap(t1)), Shield<SEXP>(Rcpp::wrap(Q)), Shield<SEXP>(Rcpp::wrap(P)));
+            rcpp_result_gen = p_sample_path(Shield<SEXP>(Rcpp::wrap(a)), Shield<SEXP>(Rcpp::wrap(b)), Shield<SEXP>(Rcpp::wrap(t0)), Shield<SEXP>(Rcpp::wrap(t1)), Shield<SEXP>(Rcpp::wrap(Q)), Shield<SEXP>(Rcpp::wrap(P)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
