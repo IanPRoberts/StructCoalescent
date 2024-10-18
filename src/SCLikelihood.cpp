@@ -1,20 +1,7 @@
 // [[Rcpp::interfaces(r, cpp)]]
-// #include <Rcpp.h>
 #include <RcppArmadillo.h>
-// [[Rcpp::depends(RcppArmadillo)]]
-
 using namespace Rcpp;
 
-//' @title SC_like_C
-//' @description Computes the likelihood of a structured coalescent genealogy
-//' @param ED NumericMatrix Extended data object representing structured phylogeny
-//' @param coal_rate NumericVector Effective population of each deme
-//' @param mig_mat NumericMatrix Backwards-in-time migration rates between pairs of demes
-//' @param node_indices NumericVector Vector giving row numbers in ED for node labels
-//' @returns List containing log-likelihood and likelihood of the structured coalescent genealogy
-//'
-//' @export
-//'
 // [[Rcpp::export]]
 
 double SC_like_C(NumericMatrix ED, NumericVector coal_rate, NumericMatrix bit_mig_mat, NumericVector node_indices) {

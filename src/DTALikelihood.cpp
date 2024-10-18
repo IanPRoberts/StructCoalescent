@@ -1,18 +1,6 @@
 // [[Rcpp::interfaces(r, cpp)]]
 #include <Rcpp.h>
-
 using namespace Rcpp;
-
-//' @title DTALikelihoodC
-//' @description Computes the DTA likelihood of a structured genealogy
-//' @param ED NumericMatrix Extended data object representing structured phylogeny
-//' @param coal_rate NumericVector Coalescent rate in each deme (1 / effective population size)
-//' @param bit_mig_mat NumericMatrix Backwards-in-time migration rates between pairs of demes
-//' @param node_indices NumericVector Vector giving row numbers in ED for node labels
-//' @returns List containing log-likelihood and likelihood of the structured coalescent genealogy
-//'
-//' @export
-//'
 // [[Rcpp::export]]
 
 List DTALikelihoodC(NumericMatrix ED, NumericMatrix fit_mig_mat, NumericVector node_indices){

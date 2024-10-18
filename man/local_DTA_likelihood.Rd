@@ -2,20 +2,7 @@
 % Please edit documentation in R/Local_likelihoods.R
 \name{local_DTA_likelihood}
 \alias{local_DTA_likelihood}
-\title{#' Local Structured Coalescent Likelihood
-#'
-#' Computes the structured coalescent likelihood locally between two specified events
-#'
-#'
-#' @param ED Extended data representation of a phylogeny including migration history
-#' @param coal_rate Vector of coalescent rates
-#' @param bit_mig_mat Backward-in-time migration matrix for the phylogeny
-#' @param event_ids Pair of event IDs to compute likelihood between
-#' @param node_indices Node indices
-#' @param deme_decomp Deme Decomp
-#' @return Likelihood & log_likelihood between events
-#'
-#' @export}
+\title{Local DTA Likelihood}
 \usage{
 local_DTA_likelihood(st_labels, coal_rate, fit_mig_mat)
 }
@@ -30,8 +17,5 @@ local_DTA_likelihood(st_labels, coal_rate, fit_mig_mat)
 Likelihood & log_likelihood between events
 }
 \description{
-
-}
-\details{
-
+Computes the DTA likelihood for a subtree
 }
