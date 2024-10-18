@@ -263,6 +263,45 @@ RcppExport SEXP _StructCoalescent_SC_like_C(SEXP EDSEXP, SEXP coal_rateSEXP, SEX
     UNPROTECT(1);
     return rcpp_result_gen;
 }
+// sample_path_unif3
+arma::mat sample_path_unif3(const int a, const int b, const double t0, const double t1, const arma::mat& Q, const arma::mat& P);
+static SEXP _StructCoalescent_sample_path_unif3_try(SEXP aSEXP, SEXP bSEXP, SEXP t0SEXP, SEXP t1SEXP, SEXP QSEXP, SEXP PSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const int >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const int >::type b(bSEXP);
+    Rcpp::traits::input_parameter< const double >::type t0(t0SEXP);
+    Rcpp::traits::input_parameter< const double >::type t1(t1SEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Q(QSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type P(PSEXP);
+    rcpp_result_gen = Rcpp::wrap(sample_path_unif3(a, b, t0, t1, Q, P));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _StructCoalescent_sample_path_unif3(SEXP aSEXP, SEXP bSEXP, SEXP t0SEXP, SEXP t1SEXP, SEXP QSEXP, SEXP PSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_StructCoalescent_sample_path_unif3_try(aSEXP, bSEXP, t0SEXP, t1SEXP, QSEXP, PSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 
 // validate (ensure exported C++ functions exist before calling them)
 static int _StructCoalescent_RcppExport_validate(const char* sig) { 
@@ -275,6 +314,7 @@ static int _StructCoalescent_RcppExport_validate(const char* sig) {
         signatures.insert("List(*NodeCountC)(NumericMatrix,int,NumericVector)");
         signatures.insert("NumericVector(*NodeIndicesC)(NumericMatrix)");
         signatures.insert("double(*SC_like_C)(NumericMatrix,NumericVector,NumericMatrix,NumericVector)");
+        signatures.insert("arma::mat(*sample_path_unif3)(const int,const int,const double,const double,const arma::mat&,const arma::mat&)");
     }
     return signatures.find(sig) != signatures.end();
 }
@@ -288,6 +328,7 @@ RcppExport SEXP _StructCoalescent_RcppExport_registerCCallable() {
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_NodeCountC", (DL_FUNC)_StructCoalescent_NodeCountC_try);
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_NodeIndicesC", (DL_FUNC)_StructCoalescent_NodeIndicesC_try);
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_SC_like_C", (DL_FUNC)_StructCoalescent_SC_like_C_try);
+    R_RegisterCCallable("StructCoalescent", "_StructCoalescent_sample_path_unif3", (DL_FUNC)_StructCoalescent_sample_path_unif3_try);
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_RcppExport_validate", (DL_FUNC)_StructCoalescent_RcppExport_validate);
     return R_NilValue;
 }
@@ -300,6 +341,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_StructCoalescent_NodeCountC", (DL_FUNC) &_StructCoalescent_NodeCountC, 3},
     {"_StructCoalescent_NodeIndicesC", (DL_FUNC) &_StructCoalescent_NodeIndicesC, 1},
     {"_StructCoalescent_SC_like_C", (DL_FUNC) &_StructCoalescent_SC_like_C, 4},
+    {"_StructCoalescent_sample_path_unif3", (DL_FUNC) &_StructCoalescent_sample_path_unif3, 6},
     {"_StructCoalescent_RcppExport_registerCCallable", (DL_FUNC) &_StructCoalescent_RcppExport_registerCCallable, 0},
     {NULL, NULL, 0}
 };

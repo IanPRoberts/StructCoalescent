@@ -68,6 +68,26 @@ SC_like_C <- function(ED, coal_rate, bit_mig_mat, node_indices) {
     .Call('_StructCoalescent_SC_like_C', PACKAGE = 'StructCoalescent', ED, coal_rate, bit_mig_mat, node_indices)
 }
 
+#' Sample path from the distribution of an endpoint-conditioned CTMC
+#'
+#' Simulate a sample path from an endpoint conditioned CTMC by uniformization
+#' using a pre-computed transition probability matrix.
+#' Taken from ECctmc-0.2.5 under a GPL-3 license
+#'
+#' @param a,b States at the interval endpoints, provided as integers
+#'    corresponding to rows of the CTMC rate matrix.
+#' @param t0,t1 times of the interval endpoints
+#' @param Q CTMC rate matrix
+#' @param P CTMC transition probability matrix over the interval.
+#'
+#' @return matrix whose first column is the sequence of transition times
+#' bookended by interval endpoints, and whose second column is the sequence of
+#' states
+#' @author Jon Fintzi (ECctmc-0.2.5)
+sample_path_unif3 <- function(a, b, t0, t1, Q, P) {
+    .Call('_StructCoalescent_sample_path_unif3', PACKAGE = 'StructCoalescent', a, b, t0, t1, Q, P)
+}
+
 # Register entry points for exported C++ functions
 methods::setLoadAction(function(ns) {
     .Call('_StructCoalescent_RcppExport_registerCCallable', PACKAGE = 'StructCoalescent')

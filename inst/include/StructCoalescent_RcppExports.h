@@ -172,6 +172,27 @@ namespace StructCoalescent {
         return Rcpp::as<double >(rcpp_result_gen);
     }
 
+    inline arma::mat sample_path_unif3(const int a, const int b, const double t0, const double t1, const arma::mat& Q, const arma::mat& P) {
+        typedef SEXP(*Ptr_sample_path_unif3)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_sample_path_unif3 p_sample_path_unif3 = NULL;
+        if (p_sample_path_unif3 == NULL) {
+            validateSignature("arma::mat(*sample_path_unif3)(const int,const int,const double,const double,const arma::mat&,const arma::mat&)");
+            p_sample_path_unif3 = (Ptr_sample_path_unif3)R_GetCCallable("StructCoalescent", "_StructCoalescent_sample_path_unif3");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_sample_path_unif3(Shield<SEXP>(Rcpp::wrap(a)), Shield<SEXP>(Rcpp::wrap(b)), Shield<SEXP>(Rcpp::wrap(t0)), Shield<SEXP>(Rcpp::wrap(t1)), Shield<SEXP>(Rcpp::wrap(Q)), Shield<SEXP>(Rcpp::wrap(P)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<arma::mat >(rcpp_result_gen);
+    }
+
 }
 
 #endif // RCPP_StructCoalescent_RCPPEXPORTS_H_GEN_

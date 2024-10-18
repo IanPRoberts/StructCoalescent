@@ -205,7 +205,6 @@ local_DTA_subtree_proposal <- function(ED, st_labels, fit_rates, n_deme=nrow(fit
       messages[st_id, st_parent_ids[st_id], ] <- trans_mats[, current_deme, st_id]
     } else {
       # Other subtree nodes contribute transition matrix %*% incoming messages
-      # messages[st_id, st_parent_ids[st_id], ] <- trans_mats[,, st_id] %*% apply(messages[st_child_ids[st_id,], st_id,], 2, prod)
       messages[st_id, st_parent_ids[st_id], ] <- trans_mats[,, st_id] %*% (messages[st_child_ids[st_id,1], st_id ,] * messages[st_child_ids[st_id,2], st_id, ])
       messages[st_id, st_parent_ids[st_id], ] <- messages[st_id, st_parent_ids[st_id], ] / sum(messages[st_id, st_parent_ids[st_id], ])
     }
@@ -255,11 +254,11 @@ local_DTA_subtree_proposal <- function(ED, st_labels, fit_rates, n_deme=nrow(fit
 
     ###### ECctmc::sample_path_unif returns t(mig_path) if 0 migrations added
     ###### BUG IN SOURCE CODE!!!
-    if (nrow(mig_path) == ncol(mig_path)){
-      if (mig_path[1,2] == st_edge_lengths[st_id]){
-        mig_path <- t(mig_path)
-      }
-    }
+    # if (nrow(mig_path) == ncol(mig_path)){
+    #   if (mig_path[1,2] == st_edge_lengths[st_id]){
+    #     mig_path <- t(mig_path)
+    #   }
+    # }
 
     n_mig <- nrow(mig_path) - 2
 
