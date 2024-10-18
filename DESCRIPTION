@@ -4,7 +4,7 @@ Title: Bayesian Inference using the Structured Coalescent
 Version: 0.1.0
 Author: Ian Roberts
 Maintainer: Ian Roberts <Ian.Roberts.1@warwick.ac.uk>
-Description: One paragraph description of what the package does as one or more full sentences.
+Description: Bayesian inference for the exact structured coalescent model conditional on a fixed dated phylogenetic tree.
 License: GPL (>= 3)
 Imports:
     ape (>= 5.4.1),
