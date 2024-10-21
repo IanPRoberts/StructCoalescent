@@ -4,14 +4,19 @@
 \alias{MTT_st_coal_node}
 \title{MultiTypeTree Subtree}
 \usage{
-MTT_st_coal_node(ED, st_depth = 1, NI = NodeIndicesC(ED), selected_node = NA)
+MTT_st_coal_node(
+  ED,
+  st_depth = 1,
+  node_indices = NodeIndicesC(ED),
+  selected_node = NA
+)
 }
 \arguments{
 \item{ED}{Extended data representation of phylogenetic tree and initial migration history}
 
 \item{st_depth}{Number of generations below the selected coalescent node to include in the subtree}
 
-\item{NI}{Vector of row indices corresponding to which row of ED corresponds to each node label}
+\item{node_indices}{Vector of row indices corresponding to which row of ED corresponds to each node label}
 
 \item{selected_node}{(optional) Selected coalescent node to use as centre of subtree}
 }

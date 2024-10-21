@@ -2,16 +2,13 @@
 % Please edit documentation in R/Vaughan_2015_MultiTypeTree_NodeRetype.R
 \name{MTT_node_retype}
 \alias{MTT_node_retype}
-\alias{MTT_node_retype_eigen}
 \title{MultiTypeTree Node Retype}
 \usage{
-MTT_node_retype(ED, st_labels, bit_rates, NI = NodeIndicesC(ED))
-
-MTT_node_retype_eigen(
+MTT_node_retype(
   ED,
   st_labels,
   bit_rates,
-  NI = NodeIndicesC(ED),
+  node_indices = NodeIndicesC(ED),
   eigen_vals = eigen(bit_rates)$values,
   eigen_vecs = eigen(bit_rates)$vectors,
   inverse_vecs = solve(eigen_vecs)
@@ -24,7 +21,7 @@ MTT_node_retype_eigen(
 
 \item{bit_rates}{Transition matrix of a Markov process corresponding to a process with rates given by the backwards-in-time migration matrix}
 
-\item{NI}{Vector of row indices corresponding to which row of ED corresponds to each node label}
+\item{node_indices}{Vector of row indices corresponding to which row of ED corresponds to each node label}
 }
 \value{
 List consisting of proposal, a structured phylogeny with updates made to the selected subtree, and prop_prob, the probability of the given update

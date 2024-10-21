@@ -86,6 +86,45 @@ RcppExport SEXP _StructCoalescent_DemeDecompC(SEXP EDSEXP, SEXP n_demeSEXP, SEXP
     UNPROTECT(1);
     return rcpp_result_gen;
 }
+// MTT_transition_kernelC
+List MTT_transition_kernelC(NumericMatrix ED, NumericMatrix bit_rates, NumericVector node_indices, NumericVector eigen_vals, NumericMatrix eigen_vecs, NumericMatrix inverse_vecs);
+static SEXP _StructCoalescent_MTT_transition_kernelC_try(SEXP EDSEXP, SEXP bit_ratesSEXP, SEXP node_indicesSEXP, SEXP eigen_valsSEXP, SEXP eigen_vecsSEXP, SEXP inverse_vecsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type ED(EDSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type bit_rates(bit_ratesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type node_indices(node_indicesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type eigen_vals(eigen_valsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type eigen_vecs(eigen_vecsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type inverse_vecs(inverse_vecsSEXP);
+    rcpp_result_gen = Rcpp::wrap(MTT_transition_kernelC(ED, bit_rates, node_indices, eigen_vals, eigen_vecs, inverse_vecs));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _StructCoalescent_MTT_transition_kernelC(SEXP EDSEXP, SEXP bit_ratesSEXP, SEXP node_indicesSEXP, SEXP eigen_valsSEXP, SEXP eigen_vecsSEXP, SEXP inverse_vecsSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_StructCoalescent_MTT_transition_kernelC_try(EDSEXP, bit_ratesSEXP, node_indicesSEXP, eigen_valsSEXP, eigen_vecsSEXP, inverse_vecsSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 // FitMigMatC
 NumericMatrix FitMigMatC(NumericMatrix bit_mm, NumericVector coal_rate);
 static SEXP _StructCoalescent_FitMigMatC_try(SEXP bit_mmSEXP, SEXP coal_rateSEXP) {
@@ -309,6 +348,7 @@ static int _StructCoalescent_RcppExport_validate(const char* sig) {
     if (signatures.empty()) {
         signatures.insert("List(*DTALikelihoodC)(NumericMatrix,NumericMatrix,NumericVector)");
         signatures.insert("List(*DemeDecompC)(NumericMatrix,int,NumericVector)");
+        signatures.insert("List(*MTT_transition_kernelC)(NumericMatrix,NumericMatrix,NumericVector,NumericVector,NumericMatrix,NumericMatrix)");
         signatures.insert("NumericMatrix(*FitMigMatC)(NumericMatrix,NumericVector)");
         signatures.insert("NumericMatrix(*BitMigMatC)(NumericMatrix,NumericVector)");
         signatures.insert("List(*NodeCountC)(NumericMatrix,int,NumericVector)");
@@ -323,6 +363,7 @@ static int _StructCoalescent_RcppExport_validate(const char* sig) {
 RcppExport SEXP _StructCoalescent_RcppExport_registerCCallable() { 
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_DTALikelihoodC", (DL_FUNC)_StructCoalescent_DTALikelihoodC_try);
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_DemeDecompC", (DL_FUNC)_StructCoalescent_DemeDecompC_try);
+    R_RegisterCCallable("StructCoalescent", "_StructCoalescent_MTT_transition_kernelC", (DL_FUNC)_StructCoalescent_MTT_transition_kernelC_try);
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_FitMigMatC", (DL_FUNC)_StructCoalescent_FitMigMatC_try);
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_BitMigMatC", (DL_FUNC)_StructCoalescent_BitMigMatC_try);
     R_RegisterCCallable("StructCoalescent", "_StructCoalescent_NodeCountC", (DL_FUNC)_StructCoalescent_NodeCountC_try);
@@ -336,6 +377,7 @@ RcppExport SEXP _StructCoalescent_RcppExport_registerCCallable() {
 static const R_CallMethodDef CallEntries[] = {
     {"_StructCoalescent_DTALikelihoodC", (DL_FUNC) &_StructCoalescent_DTALikelihoodC, 3},
     {"_StructCoalescent_DemeDecompC", (DL_FUNC) &_StructCoalescent_DemeDecompC, 3},
+    {"_StructCoalescent_MTT_transition_kernelC", (DL_FUNC) &_StructCoalescent_MTT_transition_kernelC, 6},
     {"_StructCoalescent_FitMigMatC", (DL_FUNC) &_StructCoalescent_FitMigMatC, 2},
     {"_StructCoalescent_BitMigMatC", (DL_FUNC) &_StructCoalescent_BitMigMatC, 2},
     {"_StructCoalescent_NodeCountC", (DL_FUNC) &_StructCoalescent_NodeCountC, 3},

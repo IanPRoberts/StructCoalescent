@@ -67,6 +67,27 @@ namespace StructCoalescent {
         return Rcpp::as<List >(rcpp_result_gen);
     }
 
+    inline List MTT_transition_kernelC(NumericMatrix ED, NumericMatrix bit_rates, NumericVector node_indices, NumericVector eigen_vals, NumericMatrix eigen_vecs, NumericMatrix inverse_vecs) {
+        typedef SEXP(*Ptr_MTT_transition_kernelC)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_MTT_transition_kernelC p_MTT_transition_kernelC = NULL;
+        if (p_MTT_transition_kernelC == NULL) {
+            validateSignature("List(*MTT_transition_kernelC)(NumericMatrix,NumericMatrix,NumericVector,NumericVector,NumericMatrix,NumericMatrix)");
+            p_MTT_transition_kernelC = (Ptr_MTT_transition_kernelC)R_GetCCallable("StructCoalescent", "_StructCoalescent_MTT_transition_kernelC");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_MTT_transition_kernelC(Shield<SEXP>(Rcpp::wrap(ED)), Shield<SEXP>(Rcpp::wrap(bit_rates)), Shield<SEXP>(Rcpp::wrap(node_indices)), Shield<SEXP>(Rcpp::wrap(eigen_vals)), Shield<SEXP>(Rcpp::wrap(eigen_vecs)), Shield<SEXP>(Rcpp::wrap(inverse_vecs)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<List >(rcpp_result_gen);
+    }
+
     inline NumericMatrix FitMigMatC(NumericMatrix bit_mm, NumericVector coal_rate) {
         typedef SEXP(*Ptr_FitMigMatC)(SEXP,SEXP);
         static Ptr_FitMigMatC p_FitMigMatC = NULL;

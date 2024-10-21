@@ -18,6 +18,10 @@ DemeDecompC <- function(ED, n_deme, node_indices) {
     .Call('_StructCoalescent_DemeDecompC', PACKAGE = 'StructCoalescent', ED, n_deme, node_indices)
 }
 
+MTT_transition_kernelC <- function(ED, bit_rates, node_indices, eigen_vals, eigen_vecs, inverse_vecs) {
+    .Call('_StructCoalescent_MTT_transition_kernelC', PACKAGE = 'StructCoalescent', ED, bit_rates, node_indices, eigen_vals, eigen_vecs, inverse_vecs)
+}
+
 #' @title Forward-in-time migration matrix conversion
 #' @description Computes the forward-in-time migration matrix associated with a given backwards-in-time migration matrix, coalescent rate and time scale
 #' @param bit_mm NumericMatrix Backward-in-time migration matrix

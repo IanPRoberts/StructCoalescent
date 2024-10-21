@@ -62,3 +62,31 @@ local_DTA_likelihood <- function(st_labels, coal_rate, fit_mig_mat){
   st_labels[is_leaf, 3:4] <- NA
   return(DTALikelihoodC(st_labels, fit_mig_mat, NodeIndicesC(st_labels)))
 }
+
+#' Local MTT Likelihood
+#'
+#' Computes the proposal kernel for a MultiTypeTree NodeRetype operator
+#'
+#' @param ED Structured phylogeny using internal data structure
+#' @param st_labels subset of rows from an ED object giving all nodes in a subtree
+#' @param bit_rates Backwards-in-time migration rates matrix
+#' @return Likelihood & log_likelihood between events
+
+local_MTT_transition_kernel <- function(ED, st_labels, bit_rates, node_indices = NodeIndicesC(ED), eigen_vals = eigen(bit_rates)$values, eigen_vecs = eigen(bit_rates)$vectors, inverse_vecs = solve(eigen_vecs)){
+  #Modify st_labels into valid ED structure (no reference below leaves or above root)
+  st_labels <- ED[node_indices[st_labels[,1]],]
+  st_labels[1,c(2,7)] <- NA #Parents of st_root (in row 1) = NA
+
+  is_leaf <- is.na(st_labels[,3]) | #Leaf of ED
+    !((st_labels[,8] %in% st_labels[,1]) | (st_labels[,9] %in% st_labels[,1])) #Neither child coalescent node is in st_labels
+  st_labels[is_leaf, c(3:4, 8:9)] <- NA #Children of st_leaves = NA
+
+  #Extract migration events in subtree and add to st_labels
+  is_st_mig <- (ED[,7] %in% st_labels[,1]) & #Parent coalescent node in subtree
+    ((ED[,8] %in% st_labels[,1]) | (ED[,9] %in% st_labels[,1])) & #Child coalescent node in subtree
+    is.na(ED[,4]) #Is migration
+
+  st_labels <- rbind(st_labels, ED[is_st_mig,])
+
+  return(MTT_proposal_like_eigen(st_labels, bit_rates, NodeIndicesC(st_labels), eigen_vals, eigen_vecs, inverse_vecs))
+}
