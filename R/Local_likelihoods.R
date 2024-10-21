@@ -88,5 +88,5 @@ local_MTT_transition_kernel <- function(ED, st_labels, bit_rates, node_indices =
 
   st_labels <- rbind(st_labels, ED[is_st_mig,])
 
-  return(MTT_proposal_like_eigen(st_labels, bit_rates, NodeIndicesC(st_labels), eigen_vals, eigen_vecs, inverse_vecs))
+  return(MTT_transition_kernel(st_labels, bit_rates, NodeIndicesC(st_labels), eigen_vals, eigen_vecs, inverse_vecs))
 }
