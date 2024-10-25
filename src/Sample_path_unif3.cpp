@@ -54,8 +54,8 @@ arma::mat sample_path(const int a, const int b, const double t0, const double t1
     arma::mat path(2,2);
 
     // fill matrix
-    path(0,0) = t0; path(1,0) = t1;
-    path(0,1) = a;  path(1,1) = b;
+    path(0,0) = t0; path(0,1) = a;
+    path(1,0) = t1;  path(1,1) = b;
 
     return path;
 
@@ -75,8 +75,8 @@ arma::mat sample_path(const int a, const int b, const double t0, const double t1
         arma::mat path(2,2);
 
         // fill matrix
-        path(0,0) = t0; path(0,1) = t1;
-        path(1,0) = a;  path(1,1) = b;
+        path(0,0) = t0; path(0,1) = a;
+        path(1,0) = t1;  path(1,1) = b;
 
         return path;
         // if the endpoints don't match, the jump is real

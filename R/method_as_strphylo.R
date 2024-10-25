@@ -1,3 +1,4 @@
+#' @export
 as.strphylo <- function (x, ...){
   if (identical(class(x), "strphylo")) return(x)
   UseMethod("as.strphylo")

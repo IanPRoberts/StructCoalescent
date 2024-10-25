@@ -9,93 +9,71 @@
 #' @param n_deme Number of distinct demes in the population
 #'
 #' @return Updated extended data object with the proposal from the migration birth move
-#'
-#' @export
 
 migration_birth <- function(ED, n_deme, fix_leaf_deme = TRUE, node_indices){
-  root.node <- ED[is.na(ED[,2]), 1]
-  coalescence.nodes <- ED[!is.na(ED[,4]),1]
-  coalescence.nodes <- coalescence.nodes[coalescence.nodes != root.node]
-  leaf.nodes <- ED[(is.na(ED[,3])) & (is.na(ED[,4])), 1]
-  migration.nodes <- ED[ is.na(ED[,4]) & (!is.na(ED[,3])) ,1]
+  edge_lengths <- ED[,6] - ED[node_indices[ED[,2]], 6]
+  edge_lengths[is.na(edge_lengths)] <- 0
+  child_row <- node_indices[sample(ED[,1], 1, prob=edge_lengths)] #Sample child_row with probability proportional to branch length above
 
-  parent.rows <- node_indices[ED[,2]]
-  parent.times <- ED[parent.rows, 6]
-  parent.times[root.node] <- 0
-  edge.length <- ED[,6] - parent.times
+  subtree_rows <- active_rows <- child_row
 
-  tree.length <- sum(edge.length)  #Total tree length
-  new.location <- runif(1, 0, tree.length)
-
-  child.row <- min(which(cumsum(edge.length) >= new.location))
-  child.node <- ED[child.row, 1]
-
-  parent.node <- ED[child.row, 2]
-  parent.row <- node_indices[parent.node]
-
-  #Calculating subtree containing edge <new.node, child.node> terminating in migration or leaf nodes
-  subtree.nodes <- child.node
-  active.nodes <- child.node
-  while (any(active.nodes %in% coalescence.nodes)){
-    active.nodes <- active.nodes[active.nodes %in% coalescence.nodes]
-
-    active.rows <- node_indices[active.nodes]
-    subtree.nodes <- c(subtree.nodes, ED[active.rows, 3:4]) #Add children of active.nodes to subtree
-    active.nodes <- ED[active.rows, 3:4]
+  #Subtree containing <new_node, child_node> terminating in migration or leaf nodes
+  while (length(active_rows) > 0){
+    active_rows <- active_rows[!is.na(ED[active_rows, 4])] #Coalescent nodes only
+    active_rows <- node_indices[ED[active_rows, 3:4]]
+    subtree_rows <- c(subtree_rows,
+                      active_rows)
   }
 
-  if ((fix_leaf_deme == TRUE) && (any(subtree.nodes %in% leaf.nodes))){
-    # REJECT
-    return(list(ED = ED, prop.ratio = 0, log.prop.ratio = -Inf, node_indices = node_indices))
-  } else{
-    #Continue proposal
-    subtree.leaves <- subtree.nodes[subtree.nodes %in% migration.nodes]
-    old.deme <- ED[child.row, 5]
-
-    proposal.deme <- sample.vector((1:n_deme)[- old.deme], 1)  #Propose deme update without accounting for surrounding demes
-
-    subtree.leaf.rows <- node_indices[subtree.leaves]
-    subtree.leaf.children <- ED[subtree.leaf.rows, 3]
-    subtree.leaf.children.rows <- node_indices[subtree.leaf.children]
-
-    if (any(ED[subtree.leaf.children.rows, 5] == proposal.deme)){
-      #REJECT
-      return(list(ED = ED, prop.ratio = 0, log.prop.ratio = -Inf, node_indices = node_indices))
-    }
-
-    #Update deme across subtree
-    subtree.rows <- node_indices[subtree.nodes]
-    ED[subtree.rows, 5] <- proposal.deme
-
-    new.node <- max(ED[,1]) + 1
-
-    #Update child.row with new parent
-    ED[child.row, 2] <- new.node
-
-    #Update parent row with new child
-    which.child <- which(ED[parent.row, 3:4] == child.node)
-    ED[parent.row, 2 + which.child] <- new.node  #which.child either 1 or 2 so add 2 to get to col no.
-
-    #Add row for new.node
-    cumulative.edge.length <- c(0, cumsum(edge.length)[-length(edge.length)])  #Offset cumsum(edge.length) by 1 in case new.location is on first edge in edge length
-    new.age <- ED[child.row, 6] - (new.location - max(cumulative.edge.length[cumulative.edge.length < new.location])) #Age of new.node (currently have distance along tree from new.location)
-
-    ED <- rbind(ED, c(new.node, parent.node, child.node, NA, old.deme, new.age))
-    prop.ratio <- (n_deme - 1) * tree.length / (length(migration.nodes) + 1)
-    log.prop.ratio <- log(n_deme - 1) + log(tree.length) - log(length(migration.nodes) + 1)
-
-    if (new.node > length(node_indices)){
-      new.node_indices <- numeric(new.node)
-      new.node_indices[1:length(node_indices)] <- node_indices
-    } else{
-      new.node_indices <- node_indices
-    }
-    new.node_indices[new.node] <- dim(ED)[1]
-
-    return(list(ED= ED, prop.ratio = prop.ratio, log.prop.ratio = log.prop.ratio, node_indices = new.node_indices))
+  if (fix_leaf_deme == TRUE & anyNA(ED[subtree_rows, 3])){
+    #Early rejection if leaf in subtree and leaf demes are fixed
+    return(list(ED = structure(ED, class='ED'), prop.ratio=0, log.prop.ratio=-Inf, node_indices=node_indices))
   }
+
+  subtree_leaf_rows <- subtree_rows[is.na(ED[subtree_rows, 4])]
+  current_deme <- ED[child_row, 5]
+
+  if (n_deme == 2){
+    new_deme <- 3 - current_deme
+  } else {
+    new_deme <- sample((1:n_deme)[-current_deme], 1)
+  }
+
+  subtree_leaf_children_rows <- node_indices[na.omit(ED[subtree_leaf_rows, 3])]
+
+  if (any(ED[subtree_leaf_children_rows, 5] == new_deme)){
+    #Early rejection if leaf in subtree matches new deme
+    return(list(ED = structure(ED, class='ED'), prop.ratio=0, log.prop.ratio=-Inf, node_indices=node_indices))
+  }
+
+  ED[subtree_rows, 5] <- new_deme
+  node_ID <- max(ED[,1]) + 1
+
+  #Update child of parent of child_row
+  parent_node <- ED[child_row, 2]
+  child_node <- ED[child_row, 1]
+  parent_row <- node_indices[parent_node]
+  ED[parent_row, 2 + which(ED[parent_row, 3:4] == child_node)] <- node_ID
+
+  ED[child_row, 2] <- node_ID #Update parent of child_row
+
+
+  migration_age <- ED[child_row, 6] - runif(1) * edge_lengths[child_row] #Age of new migration
+  if (is.na(ED[child_row, 4])){ #Child_node is migration or leaf
+    ED <- rbind(ED,
+                c(node_ID, parent_node, child_node, NA, current_deme, migration_age, ED[child_row, 7:9]))
+  } else { #Child_node is coalescence event
+    ED <- rbind(ED,
+                c(node_ID, parent_node, child_node, NA, current_deme, migration_age, ED[child_row, 7], child_node, NA))
+  }
+
+  tree_length <- sum(edge_lengths, na.rm=TRUE)
+  n_mig <- sum(is.na(ED[,4]) & !is.na(ED[,3]))
+  prop_ratio <- (n_deme - 1) * tree_length / (n_mig + 1)
+  log_prop_ratio <- log(n_deme - 1) + log(tree_length) - log(n_mig + 1)
+
+  return(list(ED = structure(ED, class='ED'), prop.ratio=prop_ratio, log.prop.ratio=log_prop_ratio, node_indices=NodeIndicesC(ED)))
 }
-
 
 #' Migration Death MCMC Move
 #'
@@ -108,83 +86,71 @@ migration_birth <- function(ED, n_deme, fix_leaf_deme = TRUE, node_indices){
 #' @param n_deme Number of distinct demes in the population
 #'
 #' @return Updated extended data object with the proposal from the migration death move
-#'
-#' @export
 
-ed.mig.death <- function(ED, n_deme, fix_leaf_deme = TRUE, node_indices){
-  root.node <- ED[is.na(ED[,2]), 1]
-  coalescence.nodes <- ED[!is.na(ED[,4]),1]
-  coalescence.nodes <- coalescence.nodes[coalescence.nodes != root.node]
-  leaf.nodes <- ED[(is.na(ED[,3])) & (is.na(ED[,4])), 1]
-  migration.nodes <- ED[ is.na(ED[,4]) & (!is.na(ED[,3])) ,1]
+migration_death <- function(ED, n_deme, fix_leaf_deme = TRUE, node_indices){
+  migration_nodes <- ED[is.na(ED[,4]) & !is.na(ED[,3]), 1]
 
-  parent.rows <- node_indices[ED[,2]]
-  parent.times <- ED[parent.rows, 6]
-  parent.times[root.node] <- 0
-  edge.length <- ED[,6] - parent.times
-
-  tree.length <- sum(edge.length)  #Total tree length
-
-  if (length(migration.nodes) == 0){
-    #REJECT
-    return(list(ED = ED, prop.ratio = 0, log.prop.ratio = -Inf, node_indices = node_indices))
-  }
-  selected.node <- sample.vector(migration.nodes, 1)
-  selected.row <- node_indices[selected.node]
-
-  child.node <- ED[selected.row, 3]
-  child.row <- node_indices[child.node]
-
-  #Calculating subtree containing edge <new.node, child.node> terminating in migration or leaf nodes
-  subtree.nodes <- child.node
-  active.nodes <- child.node
-  while (any(active.nodes %in% coalescence.nodes)){
-    active.nodes <- active.nodes[active.nodes %in% coalescence.nodes]
-    active.rows <- node_indices[active.nodes]
-    subtree.nodes <- c(subtree.nodes, ED[active.rows, 3:4]) #Add children of active.nodes to subtree
-    active.nodes <- ED[active.rows, 3:4]
+  if (length(migration_nodes) == 0){
+    #Reject, no migration events in ED to remove
+    return(list(ED = structure(ED, class='ED'), prop.ratio=0, log.prop.ratio=-Inf, node_indices=node_indices))
   }
 
-  if ((fix_leaf_deme == TRUE) && (any(subtree.nodes %in% leaf.nodes))){
-    # REJECT
-    return(list(ED = ED, prop.ratio = 0, log.prop.ratio = -Inf, node_indices = node_indices))
-  } else{
-    #Continue proposal
-    subtree.leaves <- subtree.nodes[subtree.nodes %in% migration.nodes]
-
-    subtree.leaf.rows <- node_indices[subtree.leaves]
-    subtree.leaf.children <- ED[subtree.leaf.rows, 3]
-    subtree.leaf.children.rows <- node_indices[subtree.leaf.children]
-    forbidden.demes <- unique(ED[subtree.leaf.children.rows, 5])
-
-    proposal.deme <- ED[selected.row, 5]  #Propose deme immediately above subtree
-    if (proposal.deme %in% forbidden.demes){
-      #REJECT - cannot change deme
-      return(list(ED = ED, prop.ratio = 0, log.prop.ratio = -Inf, node_indices = node_indices))
-    }
-
-    parent.node <- ED[selected.row, 2]
-    parent.row <- node_indices[parent.node]
-
-    #Update deme across subtree
-    subtree.rows <- node_indices[subtree.nodes]
-    ED[subtree.rows, 5] <- proposal.deme
-
-    ED[child.row, 2] <- parent.node  #Update child.node parent
-
-    #Update parent.node child
-    which.child <- which(ED[parent.row, 3:4] == selected.node)
-    ED[parent.row, 2 + which.child] <- child.node
-
-    node_indices[selected.node] <- 0
-    index.changes <- (node_indices > selected.row)
-    node_indices[index.changes] <- node_indices[index.changes] - 1
-
-    ED <- ED[-selected.row,]
-    prop.ratio <- length(migration.nodes)/ ((n_deme - 1) * tree.length)
-    log.prop.ratio <- log(length(migration.nodes)) - log(n_deme - 1) - log(tree.length)
-    return(list(ED = ED, prop.ratio = prop.ratio, log.prop.ratio = log.prop.ratio, node_indices = node_indices))
+  if (length(migration_nodes) == 1){
+    selected_node <- migration_nodes
+  } else {
+    selected_node <- sample(migration_nodes, 1)
   }
+
+  selected_row <- node_indices[selected_node]
+  child_node <- ED[selected_row, 3]
+  child_row <- node_indices[child_node]
+
+  subtree_rows <- active_rows <- child_row
+
+  #Subtree containing <selected_node, child_node> terminating in migration or leaf nodes
+  while (length(active_rows) > 0){
+    active_rows <- active_rows[!is.na(ED[active_rows, 4])] #Coalescent nodes only
+    active_rows <- node_indices[ED[active_rows, 3:4]]
+    subtree_rows <- c(subtree_rows,
+                      active_rows)
+  }
+
+  if (fix_leaf_deme == TRUE & anyNA(ED[subtree_rows, 3])){
+    #Early rejection if leaf in subtree and leaf demes are fixed
+    return(list(ED = structure(ED, class='ED'), prop.ratio=0, log.prop.ratio=-Inf, node_indices=node_indices))
+  }
+
+  subtree_leaf_rows <- subtree_rows[is.na(ED[subtree_rows, 4])]
+  subtree_leaf_children_rows <- node_indices[na.omit(ED[subtree_leaf_rows, 3])]
+
+  proposal_deme <- ED[selected_row, 5] #Deme to propagate through subtree
+
+  if (proposal_deme %in% ED[subtree_leaf_children_rows, 5]){
+    #Reject, deme invalid
+    return(list(ED = structure(ED, class='ED'), prop.ratio=0, log.prop.ratio=-Inf, node_indices=node_indices))
+  }
+
+  #Update deme of subtree
+  ED[subtree_rows, 5] <- proposal_deme
+
+  #Update parent of child_row
+  parent_node <- ED[selected_row, 2]
+  ED[child_row, 2] <- parent_node
+
+  #Update child of parent_node
+  parent_row <- node_indices[parent_node]
+  ED[parent_row, 2 + which(ED[parent_row, 3:4] == ED[selected_row, 1])] <- child_node
+
+  #Update node_indices
+  node_indices[selected_node] <- 0
+  node_indices[node_indices > selected_row] <- node_indices[node_indices > selected_row] - 1
+
+  ED <- ED[-selected_row,]
+  tree_length <- sum(ED[,6] - ED[node_indices[ED[,2]], 6], na.rm=TRUE)
+
+  prop_ratio <- length(migration_nodes)/ ((n_deme - 1) * tree_length)
+  log_prop_ratio <- log(length(migration_nodes)) - log(n_deme - 1) - log(tree_length)
+  return(list(ED = structure(ED, class='ED'), prop.ratio=prop_ratio, log.prop.ratio=log_prop_ratio, node_indices=node_indices))
 }
 
 #' Migration Pair Birth MCMC Move
@@ -198,42 +164,47 @@ ed.mig.death <- function(ED, n_deme, fix_leaf_deme = TRUE, node_indices){
 #' @param n_deme Number of distinct demes in the population
 #'
 #' @return Updated extended data object with the proposal from the migration pair birth move
-#'
-#' @export
 
-ed.mig.pair.birth <- function(ED, n_deme, node_indices){
-  root.node <- which(is.na(ED[,2]))
+migration_pair_birth <- function(ED, n_deme, node_indices){
+  selected_node <- sample(ED[!is.na(ED[,2]), 1], 1)
+  selected_row <- node_indices[selected_node]
 
-  #Sample non-root node to obtain edge <sampled.node, node.parent>
-  selected.node <- sample(ED[-root.node, 1], 1)
-  selected.row <- node_indices[selected.node]
-  parent.node <- ED[selected.row, 2]
-  parent.row <- node_indices[parent.node]
+  parent_node <- ED[selected_row, 2]
+  parent_row <- node_indices[parent_node]
 
-  new.nodes <- max(ED[,1]) + c(1,2)  #New node IDs
-  new.node.ages <- sort(runif(2, min = ED[parent.row, 6], max = ED[selected.row, 6]), decreasing = TRUE) #New node ages
+  node_IDs <- max(ED[,1]) + 1:2
+  node_ages <- sort(runif(2, ED[parent_row, 6], ED[selected_row, 6]), decreasing=TRUE)
 
-  new.deme <- sample.vector((1:n_deme)[-ED[selected.row,5]], 1)
-
-  ED[selected.row, 2] <- new.nodes[1]
-  ED[parent.row, 2 + which(ED[parent.row,3:4] == selected.node)] <- new.nodes[2]
-  ED <- rbind(ED,
-              c(new.nodes[1], new.nodes[2], selected.node, NA, new.deme, new.node.ages[1]),
-              c(new.nodes[2], parent.node, new.nodes[1], NA, ED[selected.row, 5], new.node.ages[2])
-  )
-
-  n.nodes <- dim(ED)[1]
-  prop.ratio <- (n_deme - 1) * (n.nodes - 1) * (ED[selected.row, 6] - ED[parent.row, 6])^2 / (2 * (n.nodes + 1))
-  log.prop.ratio <- log(n_deme - 1) + log(n.nodes - 1) + 2 * log(abs(ED[selected.row, 6] - ED[parent.row, 6])) - log(2) - log(n.nodes + 1)
-
-  if (new.nodes[2] > length(node_indices)){
-    new.node_indices <- numeric(new.nodes[2])
-    new.node_indices[1:length(node_indices)] <- node_indices
-  } else{
-    new.node_indices <- node_indices
+  if (n_deme == 2){
+    new_deme <- 3 - ED[selected_row, 5]
+  } else {
+    new_deme <- sample((1:n_deme)[-ED[selected_row, 5]], 1)
   }
-  new.node_indices[new.nodes] <- c(dim(ED)[1] - 1, dim(ED)[1])
-  return(list(ED = ED, prop.ratio = prop.ratio, log.prop.ratio = log.prop.ratio, node_indices = new.node_indices))
+
+  #Parent of selected_node
+  ED[selected_row, 2] <- node_IDs[1]
+
+  #Child of parent_node
+  which_child <- which(ED[parent_row, 3:4] == selected_node)
+  ED[parent_row, 2 + which_child] <- node_IDs[2]
+
+  #New migration events
+  ED <- rbind(ED,
+              c(node_IDs[1], node_IDs[2], selected_node, NA, new_deme, node_ages[1], ED[selected_row, 7], ED[parent_row, 7 + which_child], NA),
+              c(node_IDs[2], parent_node, node_IDs[1], NA, ED[selected_row, 5], node_ages[2], ED[selected_row, 7], ED[parent_row, 7 + which_child], NA))
+
+  n <- nrow(ED)
+  prop_ratio <- (n_deme - 1) * (n - 1) * (ED[selected_row, 6] - ED[parent_row, 6])^2 / (2 * (n + 1))
+  log_prop_ratio <- log(n_deme - 1) + log(n - 1) + 2 * log(ED[selected_row, 6] - ED[parent_row, 6]) - log(2) - log(n + 1)
+
+  if (node_IDs[2] > length(node_indices)){
+    new_node_indices <- numeric(node_IDs[2])
+    new_node_indices[1:length(node_indices)] <- node_indices
+  } else{
+    new_node_indices <- node_indices
+  }
+  new_node_indices[node_IDs] <- n - 1:0
+  return(list(ED = structure(ED, class='ED'), prop.ratio = prop_ratio, log.prop.ratio = log_prop_ratio, node_indices = new_node_indices))
 }
 
 #' Migration Pair Death MCMC Move
@@ -245,45 +216,47 @@ ed.mig.pair.birth <- function(ED, n_deme, node_indices){
 #' @param n_deme Number of distinct demes in the population
 #'
 #' @return Updated extended data object with the proposal from the migration pair death move
-#'
-#' @export
 
-ed.mig.pair.death <- function(ED, n_deme, node_indices){
-  root.node <- ED[is.na(ED[,2]), 1]
+migration_pair_death <- function(ED, n_deme, node_indices){
+  selected_node <- sample(ED[!is.na(ED[,2]), 1], 1)
+  selected_row <- node_indices[selected_node]
 
-  #Sample non-root node to obtain edge <sampled.node, node.parent>
-  selected.node <- sample(ED[-root.node, 1], 1)
-  selected.row <- node_indices[selected.node]
-  parent.node <- ED[selected.row, 2]
-  parent.row <- node_indices[parent.node]
-
-  if (((is.na(ED[selected.row, 4]) & (!is.na(ED[selected.row, 3])))) &&
-      ((is.na(ED[parent.row, 4]) & (!is.na(ED[parent.row, 3])))) &&
-      (ED[node_indices[ED[selected.row, 3]], 5] == ED[parent.row, 5])){
-    #Both ends of the edge are migration nodes, and the demes are consistent to remove the pair of nodes
-    parent2.node <- ED[parent.row, 2]
-    parent2.row <- node_indices[parent2.node]
-    child.node <- ED[selected.row, 3]
-    child.row <- node_indices[child.node]
-
-    n.nodes <- dim(ED)[1]
-    prop.ratio <- 2 * (n.nodes - 1) / ((n.nodes - 3) * (n_deme - 1) * (ED[child.row, 6] - ED[parent2.row, 6])^2)
-    log.prop.ratio <- log(2) + log(n.nodes - 1) - log(n.nodes - 3) - log(n_deme - 1) - 2 * log(abs(ED[child.row, 6] - ED[parent2.row, 6]))
-
-    ED[parent2.row, 2 + which(ED[parent2.row, 3:4] == parent.node)] <- child.node
-    ED[child.row, 2] <- parent2.node
-    ED <- ED[-c(selected.row, parent.row),]
-
-    node_indices[c(selected.node, parent.node)] <- 0
-    index.changes.1 <- (node_indices > selected.row)
-    index.changes.2 <- (node_indices > parent.row)
-    node_indices[index.changes.1] <- node_indices[index.changes.1] - 1
-    node_indices[index.changes.2] <- node_indices[index.changes.2] - 1
-
-    return(list(ED = ED, prop.ratio = prop.ratio, log.prop.ratio = log.prop.ratio, node_indices = node_indices))
-  } else {
-    return(list(ED = ED, prop.ratio = 0, log.prop.ratio = -Inf, node_indices = node_indices))
+  if (is.na(ED[selected_row, 3]) | !is.na(ED[selected_row, 4])){
+    #Reject, selected_node not a migration event
+    return(list(ED = structure(ED, class='ED'), prop.ratio=0, log.prop.ratio=-Inf, node_indices=node_indices))
   }
+
+  parent_node <- ED[selected_row, 2]
+  parent_row <- node_indices[parent_node]
+
+  if (is.na(ED[parent_row, 3]) | !is.na(ED[parent_row, 4])){
+    #Reject, parent_node not a migration event
+    return(list(ED = structure(ED, class='ED'), prop.ratio=0, log.prop.ratio=-Inf, node_indices=node_indices))
+  }
+
+  child_row <- node_indices[ED[selected_row, 3]]
+  child_deme <- ED[child_row, 5]
+
+  if (child_deme == ED[parent_row, 5]){
+    #Update child of parent(parent_node)
+    parent_parent_row <- node_indices[ED[parent_row, 2]]
+    which_child <- which(ED[parent_parent_row, 3:4] == parent_node)
+    ED[parent_parent_row, 2 + which_child] <- ED[child_row, 1]
+
+    #Update parent of child_node
+    ED[child_row, 2] <- ED[parent_parent_row, 1]
+
+    n <- nrow(ED)
+    prop_ratio <- 2 * (n-1) / ((n-3) * (n_deme - 1) * (ED[child_row, 6] - ED[parent_parent_row, 6])^2)
+    log_prop_ratio <- log(2) + log(n-1) - log(n-3) - log(n_deme - 1) - 2 * log(ED[child_row, 6] - ED[parent_parent_row, 6])
+
+    ED <- ED[-c(selected_row, parent_row),]
+  } else {
+    #Reject, exterior demes don't match
+    return(list(ED = structure(ED, class='ED'), prop.ratio=0, log.prop.ratio=-Inf, node_indices=node_indices))
+  }
+
+  return(list(ED = structure(ED, class='ED'), prop.ratio=prop_ratio, log.prop.ratio=log_prop_ratio, node_indices=NodeIndicesC(ED)))
 }
 
 #' Coalescent Node Merge Proposal
@@ -296,86 +269,66 @@ ed.mig.pair.death <- function(ED, n_deme, node_indices){
 #' @param node_indices Vector giving row indices for node labels
 #'
 #' @return Updated extended data object with the proposal from the migration pair birth move
-#'
-#' @export
 
-ed.coal.merge <- function(ED, n_deme, node_indices){
-  root.node <- ED[is.na(ED[,2]), 1]
-  coalescence.nodes <- ED[!is.na(ED[,4]),1]
+coalescent_merge <- function(ED, n_deme, node_indices){
+  selected_node <- sample(ED[!is.na(ED[,4]), 1], 1)
+  selected_row <- node_indices[selected_node]
 
-  selected.node <- sample.vector(coalescence.nodes, 1)
-  selected.row <- node_indices[selected.node]
+  child_nodes <- ED[selected_row, 3:4]
+  child_rows <- node_indices[child_nodes]
 
-  child.nodes <- ED[selected.row, 3:4]
-  child.rows <- node_indices[child.nodes]
-  if (!all((is.na(ED[child.rows,4])) & (!is.na(ED[child.rows,3])))){
-    #REJECT as cannot delete coalescent node
-    return(list(ED = ED, prop.ratio = 0, log.prop.ratio = -Inf, node_indices = node_indices))
+  if (any(!is.na(ED[child_rows, 4])) | any(is.na(ED[child_rows, 3]))){
+    #Reject, at least one child is coalescent or leaf node
+    return(list(ED = structure(ED, class='ED'), prop.ratio=0, log.prop.ratio=-Inf, node_indices=node_indices))
   }
 
-  child.child <- ED[child.rows, 3]
-  child.child.rows <- node_indices[child.child]
-  exterior.demes <- ED[child.child.rows, 5]
+  child_child_nodes <- ED[child_rows, 3]
+  child_child_rows <- node_indices[child_child_nodes]
+  child_demes <- ED[child_child_rows, 5]
 
-  if (exterior.demes[1] != exterior.demes[2]){
-    #REJECT as exterior demes are not the same
-    return(list(ED = ED, prop.ratio = 0, log.prop.ratio = -Inf, node_indices = node_indices))
+  if (child_demes[1] != child_demes[2]){
+    #Reject, child demes not identical
+    return(list(ED = structure(ED, class='ED'), prop.ratio=0, log.prop.ratio=-Inf, node_indices=node_indices))
   }
 
-  if (selected.node == root.node){
-    prop.ratio <- 1 / ((n_deme - 1)* (ED[child.child.rows[1], 6] - ED[selected.row, 6]) * (ED[child.child.rows[2], 6] - ED[selected.row, 6]) )
-    log.prop.ratio <- -log(n_deme - 1) - log(abs(ED[child.child.rows[1], 6] - ED[selected.row, 6])) - log(abs(ED[child.child.rows[2], 6] - ED[selected.row, 6]))
+  if (is.na(ED[selected_row, 2])){
+    #Selected_node is root - no parent migration added
+    prop_ratio <- 1 / ((n_deme - 1) * prod(ED[child_child_rows, 6] - ED[selected_row, 6]))
+    log_prop_ratio <- - log(n_deme - 1) - sum(log(ED[child_child_rows, 6] - ED[selected_row, 6]))
 
-    ED[selected.row, c(3:5)] <- c(child.child, exterior.demes[1])
-    ED[child.child.rows, 2] <- selected.node
-    ED <- ED[!ED[,1] %in% child.nodes, ] #Remove child migration nodes
+    #Update selected_row
+    ED[selected_row, 3:4] <- child_child_nodes
+    ED[selected_row, 5] <- child_demes[1]
+  } else {
+    #Selected_node is not root - parent migration added
+    parent_node <- ED[selected_row, 2]
+    parent_row <- node_indices[parent_node]
 
-    node_indices[child.nodes] <- 0
-    index.changes.1 <- (node_indices > child.rows[1])
-    index.changes.2 <- (node_indices > child.rows[2])
-    node_indices[index.changes.1] <- node_indices[index.changes.1] - 1
-    node_indices[index.changes.2] <- node_indices[index.changes.2] - 1
+    node_ID <- max(ED[,1]) + 1
+    node_age <- runif(1, ED[parent_row, 6], ED[selected_row, 6])
 
-    return(list(ED = ED, prop.ratio = prop.ratio, log.prop.ratio = log.prop.ratio, node_indices = node_indices))
-  } else{
-    parent.node <- ED[selected.row, 2]
-    parent.row <- node_indices[parent.node]
+    #Add new node
+    ED <- rbind(ED,
+                c(node_ID, parent_node, selected_node, NA, ED[selected_row, 5], node_age, ED[selected_row, 7], selected_node, NA))
 
-    new.node <- max(ED[,1]) + 1
-    new.node.time <- runif(1, ED[parent.row, 6], ED[selected.row, 6])
-    old.deme <- ED[selected.row, 5]
+    #Update selected_node
+    ED[selected_row, 2:5] <- c(node_ID, child_child_nodes, child_demes[1])
 
-    ED[selected.row, c(2:5)] <- c(new.node, child.child, exterior.demes[1])
-    ED[c(child.child.rows[1], child.child.rows[2]), 2] <- selected.node
+    #Update child_child_nodes
+    ED[child_child_rows, 2] <- selected_node
 
-    which.child <- which(ED[parent.row, 3:4] == selected.node)
-    ED[parent.row, 2 + which.child] <- new.node
+    #Update parent_node
+    which_child <- which(ED[parent_row, 3:4] == selected_node)
+    ED[parent_row, 2 + which_child] <- node_ID
 
-    prop.ratio <- (ED[selected.row, 6] - ED[parent.row ,6]) / ((ED[child.child.rows[1], 6] - ED[selected.row, 6]) * (ED[child.child.rows[2], 6] - ED[selected.row, 6]))
-    log.prop.ratio <- log(abs(ED[selected.row, 6] - ED[parent.row ,6])) - log(abs(ED[child.child.rows[1], 6] - ED[selected.row, 6])) - log(abs(ED[child.child.rows[2], 6] - ED[selected.row, 6]))
-
-
-    ED <- ED[!ED[,1] %in% child.nodes, ] #Remove child migration nodes
-    ED <- rbind(ED, c(new.node, parent.node, selected.node, NA, old.deme, new.node.time)) #Add new parent migration node
-
-    node_indices[child.nodes] <- 0
-    index.changes.1 <- (node_indices > child.rows[1])
-    index.changes.2 <- (node_indices > child.rows[2])
-    node_indices[index.changes.1] <- node_indices[index.changes.1] - 1
-    node_indices[index.changes.2] <- node_indices[index.changes.2] - 1
-
-    if (new.node > length(node_indices)){
-      new.node_indices <- numeric(new.node)
-      new.node_indices[1:length(node_indices)] <- node_indices
-    } else{
-      new.node_indices <- node_indices
-    }
-    new.node_indices[new.node] <- dim(ED)[1]
-
-    return(list(ED = ED, prop.ratio = prop.ratio, log.prop.ratio = log.prop.ratio, node_indices = new.node_indices))
+    prop_ratio <- (ED[selected_row, 6] - ED[parent_row, 6]) / prod(ED[child_child_rows, 6] - ED[selected_row, 6])
+    log_prop_ratio <- log(ED[selected_row, 6] - ED[parent_row, 6]) - sum(log(ED[child_child_rows, 6] - ED[selected_row, 6]))
   }
+
+  #Remove child_rows
+  ED <- ED[-child_rows,]
+  return(list(ED = structure(ED, class='ED'), prop.ratio=prop_ratio, log.prop.ratio=log_prop_ratio, node_indices=NodeIndicesC(ED)))
 }
-
 
 #' Coalescent Node Split Proposal
 #'
@@ -388,186 +341,71 @@ ed.coal.merge <- function(ED, n_deme, node_indices){
 #' @param node_indices Vector giving row indices for node labels
 #'
 #' @return Updated extended data object with the proposal from the migration pair birth move
-#'
-#' @export
 
-ed.coal.split <- function(ED, n_deme, node_indices){
-  root.node <- ED[is.na(ED[,2]), 1]
-  coalescence.nodes <- ED[!is.na(ED[,4]),1]
+coalescent_split <- function(ED, n_deme, node_indices){
+  selected_node <- sample(ED[!is.na(ED[,4]), 1], 1)
+  selected_row <- node_indices[selected_node]
 
-  selected.node <- sample.vector(coalescence.nodes, 1)
-  selected.row <- node_indices[selected.node]
+  child_nodes <- ED[selected_row, 3:4]
+  child_rows <- node_indices[child_nodes]
 
-  if (selected.node == root.node){
-    child.nodes <- ED[selected.row, 3:4]
-    child.rows <- node_indices[child.nodes]
+  node_IDs <- max(ED[,1]) + 1:2
+  node_ages <- sapply(ED[child_rows, 6], runif, n=1, min=ED[selected_row, 6])
 
-    new.nodes <- max(ED[,1]) + c(1,2)
-    new.node.times <- sapply(ED[child.rows, 6], runif, n = 1, min = ED[selected.row, 6])
+  current_deme <- ED[child_rows[1], 5]
+  parent_node <- ED[selected_row, 2]
 
-    proposal.deme <- sample.vector((1:n_deme)[- ED[selected.row, 5]], 1)  #Sample new deme not equal to current deme of the root
-
-    prop.ratio <- (n_deme - 1)* (ED[child.rows[1], 6] - ED[selected.row, 6]) * (ED[child.rows[2], 6] - ED[selected.row, 6])
-    log.prop.ratio <- log(n_deme - 1) + log(abs(ED[child.rows[1], 6] - ED[selected.row, 6])) + log(abs(ED[child.rows[2], 6] - ED[selected.row, 6]))
-    ED[selected.row, 3:5] <- c(new.nodes, proposal.deme)
-    ED[child.rows, 2] <- new.nodes
-    ED <- rbind(ED, matrix(c(new.nodes, rep(selected.node,2), child.nodes, rep(NA,2), rep(proposal.deme, 2), new.node.times), 2))
-
-    if (new.nodes[2] > length(node_indices)){
-      new.node_indices <- numeric(new.nodes[2])
-      new.node_indices[1:length(node_indices)] <- node_indices
-    } else{
-      new.node_indices <- node_indices
-    }
-    new.node_indices[new.nodes] <- c(dim(ED)[1] - 1, dim(ED)[1])
-
-    return(list(ED = ED, prop.ratio = prop.ratio, log.prop.ratio = log.prop.ratio, node_indices = new.node_indices))
-  } else{
-    parent.node <- ED[selected.row, 2]
-    parent.row <- node_indices[parent.node]
-
-    if (!((is.na(ED[parent.row,4])) & (!is.na(ED[parent.row,3])))){
-      #REJECT
-      return(list(ED = ED, prop.ratio = 0, log.prop.ratio = -Inf, node_indices = node_indices))
+  if (is.na(parent_node)){
+    #Selected_node is root - no check for parent migration
+    if (n_deme == 2){
+      proposal_deme <- 3 - current_deme
+    } else {
+      proposal_deme <- sample((1:n_deme)[-current_deme], 1)
     }
 
-    child.nodes <- ED[selected.row, 3:4]
-    child.rows <- node_indices[child.nodes]
+    prop_ratio <- (n_deme - 1) * prod(ED[child_rows, 6] - ED[selected_row, 6])
+    log_prop_ratio <- log(n_deme - 1) + sum(log(ED[child_rows, 6] - ED[selected_row, 6]))
+  } else {
+    #Selected_node is not root - check for parent migration
+    parent_row <- node_indices[parent_node]
 
-    parent.parent.node <- ED[parent.row, 2]
-    parent.parent.row <- node_indices[parent.parent.node]
-    new.nodes <- max(ED[,1]) + c(1,2)
-    new.node.times <- sapply(ED[child.rows, 6], runif, n = 1, min = ED[selected.row, 6])
-
-    prop.ratio <- ((ED[child.rows[1], 6] - ED[selected.row, 6]) * (ED[child.rows[2], 6] - ED[selected.row, 6])) / (ED[selected.row, 6] - ED[parent.parent.row ,6])
-    log.prop.ratio <- log(abs(ED[child.rows[1], 6] - ED[selected.row, 6])) + log(abs(ED[child.rows[2], 6] - ED[selected.row, 6])) - log(abs(ED[selected.row, 6] - ED[parent.parent.row ,6]))
-
-    which.child <- which(ED[parent.parent.row, 3:4] == parent.node)
-    ED[parent.parent.row, 2 + which.child] <- selected.node
-    ED[child.rows, 2] <- new.nodes
-    ED[selected.row, 2:5] <- c(parent.parent.node, new.nodes, ED[parent.row, 5])
-    ED <- ED[-parent.row, ]
-    ED <- rbind(ED, matrix(c(new.nodes, rep(selected.node, 2), child.nodes, rep(NA, 2), rep(ED[selected.row, 5],2), new.node.times), 2))
-
-    node_indices[parent.node] <- 0
-    index.changes <- (node_indices > parent.row)
-    node_indices[index.changes] <- node_indices[index.changes] - 1
-
-    if (new.nodes[2] > length(node_indices)){
-      new.node_indices <- numeric(new.nodes[2])
-      new.node_indices[1:length(node_indices)] <- node_indices
-    } else{
-      new.node_indices <- node_indices
+    if (is.na(ED[parent_row, 4])){
+      #Reject, parent_node is coalescence
+      return(list(ED = structure(ED, class='ED'), prop.ratio=0, log.prop.ratio=-Inf, node_indices=node_indices))
     }
-    new.node_indices[new.nodes] <- c(dim(ED)[1] - 1, dim(ED)[1])
 
-    return(list(ED = ED, prop.ratio = prop.ratio, log.prop.ratio = log.prop.ratio, node_indices = new.node_indices))
-  }
-}
+    parent_parent_node <- ED[parent_row, 2]
+    parent_parent_row <- node_indices[parent_parent_node]
 
-#' Block Recolouring MCMC Proposal
-#'
-#' Performs a block recolouring MCMC proposal on a structured coalescent
-#' migration history. A block of the migration history currently in a single
-#' deme is migrated into a new deme selected uniformly from all other demes. If
-#' an inconsistent migration history is obtained, the move will be rejected.
-#'
-#' @param ED Extended data object; matrix with columns Node ID, parent, child 1, child 2, deme, node age
-#' @param n_deme Number of distinct demes in the population
-#' @param fix_leaf_deme Logical; if TRUE, the deme of each leaf in the tree is fixed. Any proposal which attempts to change a leaf deme is automatically rejected
-#'
-#' @return Updated extended data object with the proposal from the block recolouring proposal
-#'
-#' @export
+    proposal_deme <- ED[selected_row, 5]
 
-ed.block.recolour <- function(ED, n_deme, fix_leaf_deme = TRUE, node_indices){
-  root.node <- ED[is.na(ED[,2]), 1]
-  leaf.nodes <- ED[(is.na(ED[,3])) & (is.na(ED[,4])), 1]
-  migration.nodes <- ED[ is.na(ED[,4]) & (!is.na(ED[,3])) ,1]
+    prop_ratio <- prod(ED[child_rows, 6] - ED[selected_row, 6]) / (ED[selected_row, 6] - ED[parent_parent_row, 6])
+    log_prop_ratio <- sum(log(ED[child_rows, 6] - ED[selected_row, 6])) - log(ED[selected_row, 6] - ED[parent_parent_row, 6])
 
-  if (length(migration.nodes) == 0){
-    if (fix_leaf_deme == TRUE){
-      #REJECT - no migration nodes and fixed leaf demes -> cannot change deme
-      return(list(ED = ED, prop.ratio = 0, log.prop.ratio = -Inf, node_indices = node_indices))
-    } else{ #No migration nodes -> all same deme
-      proposal.deme <- sample.vector((1:n_deme)[-ED[1, 5]], 1)
-      ED[,5] <- proposal.deme
-      return(list(ED = ED, prop.ratio = 1, log.prop.ratio = 0, node_indices = node_indices))
-    }
+    #Update children of parent_parent_node
+    which_child <- which(ED[parent_parent_row, 3:4] == parent_node)
+    ED[parent_parent_row, 2 + which_child] <- selected_node
+
+    #Update parent of selected_node
+    ED[selected_row, 2] <- parent_parent_node
   }
 
-  parent.rows <- node_indices[ED[,2]]
-  parent.times <- ED[parent.rows, 6]
-  parent.times[root.node] <- 0
-  edge.length <- ED[,6] - parent.times
+  #Update selected_node
+  ED[selected_row, 3:4] <- node_IDs
+  ED[selected_row, 5] <- proposal_deme
 
-  tree.length <- sum(edge.length)  #Total tree length
-  new.location <- runif(1, 0, tree.length)  #Uniform location along tree.length
+  #Update child_nodes
+  ED[child_rows, 2] <- node_IDs
 
-  child.row <- min(which(cumsum(edge.length) >= new.location))
-  child.node <- ED[child.row, 1]
+  #Add new nodes
+  ED <- rbind(ED,
+              c(node_IDs[1], selected_node, child_nodes[1], NA, proposal_deme, node_ages[1], ED[child_rows[1], 7], ED[selected_row, 8], NA),
+              c(node_IDs[2], selected_node, child_nodes[2], NA, proposal_deme, node_ages[2], ED[child_rows[2], 7], ED[selected_row, 8], NA))
 
-  #Sweep upwards until hitting the root or a migration node
-  subtree.root <- ED[child.row, 2]
-  while (! any(subtree.root == c(migration.nodes, root.node))){
-    subtree.root.row <- node_indices[subtree.root]
-    subtree.root <- ED[subtree.root.row, 2]
+  if (!is.na(parent_node)){
+    #Remove parent_node
+    ED <- ED[-parent_row,]
   }
 
-  #Sweep downwards until hitting migration nodes
-  subtree.root.row <- node_indices[subtree.root]
-  if (subtree.root == root.node){
-    active.nodes <- ED[subtree.root.row, 3:4]
-    subtree.nodes <- c(subtree.root, active.nodes)
-  } else{
-    active.nodes <- ED[subtree.root.row, 3]
-    subtree.nodes <- c(subtree.root, active.nodes)
-  }
-
-  while (! all(active.nodes %in% migration.nodes)){
-    active.nodes <- active.nodes[! (active.nodes %in% c(migration.nodes, leaf.nodes))]
-    active.rows <- node_indices[active.nodes]
-    subtree.nodes <- c(subtree.nodes, ED[active.rows, 3:4])
-    active.nodes <- ED[active.rows, 3:4]
-  }
-
-  if ((fix_leaf_deme == TRUE) && (any(subtree.nodes %in% leaf.nodes))){
-    # REJECT
-    return(list(ED = ED, prop.ratio = 0, log.prop.ratio = -Inf, node_indices = node_indices))
-  } else{
-    #Continue proposal
-    subtree.leaves <- subtree.nodes[subtree.nodes %in% migration.nodes]
-    if (subtree.root %in% subtree.leaves){
-      subtree.leaves <- subtree.leaves[subtree.leaves != subtree.root]
-    }
-    old.deme <- ED[child.row, 5]
-
-    proposal.deme <- sample.vector((1:n_deme)[- old.deme], 1)  #Propose deme update without accounting for surrounding demes
-
-    subtree.leaf.rows <- node_indices[subtree.leaves]
-    subtree.leaf.children <- ED[subtree.leaf.rows, 3]
-    subtree.leaf.children.rows <- node_indices[subtree.leaf.children]
-
-    if (any(ED[subtree.leaf.children.rows, 5] == proposal.deme)){
-      #REJECT - induces self-migration
-      return(list(ED = ED, prop.ratio = 0, log.prop.ratio = -Inf, node_indices = node_indices))
-    }
-
-    if (subtree.root != root.node){
-      if (ED[subtree.root.row, 5] == proposal.deme){
-        #REJECT
-        return(list(ED = ED, prop.ratio = 0, log.prop.ratio = -Inf, node_indices = node_indices))
-      }
-    }
-
-    #Update deme across subtree
-    if (subtree.root == root.node){
-      subtree.rows <- node_indices[subtree.nodes]
-    } else{
-      subtree.rows <- node_indices[subtree.nodes[subtree.nodes != subtree.root]]
-    }
-    ED[subtree.rows, 5] <- proposal.deme
-
-    return(list(ED = ED, prop.ratio = 1, log.prop.ratio = 0, node_indices = node_indices))
-  }
+  return(list(ED = structure(ED, class='ED'), prop.ratio=prop_ratio, log.prop.ratio=log_prop_ratio, node_indices=NodeIndicesC(ED)))
 }

@@ -12,10 +12,15 @@
 #'
 #' @export
 
-rstrphylo <- function(n, d, tip_data=cbind(1:n,0,rep_len(1:d,n)), coalescent_rates=1/effective_population_sizes, migration_matrix, effective_population_sizes=1/coalescent_rates){
+rstrphylo <- function(n, d, coalescent_rates=1/effective_population_sizes, migration_matrix, tip_data=cbind(1:n,0,rep_len(1:d,n)), effective_population_sizes=1/coalescent_rates){
   #Order by decreasing tip age
+  tip_labels <- tip_data[,1]
+  tip_data[,1] <- 1:n
+  tip_data <- apply(tip_data, 2, as.numeric)
+
   tip_order <- order(tip_data[,2], decreasing = TRUE)
   tip_data <- tip_data[tip_order,]
+  tip_labels <- tip_labels[tip_order]
 
   ED <- cbind('Node_ID'=1:n,
               'Parent'=NA,
@@ -119,6 +124,7 @@ rstrphylo <- function(n, d, tip_data=cbind(1:n,0,rep_len(1:d,n)), coalescent_rat
 
   class(ED) <- 'ED'
   strphylo <- as.strphylo(ED)
-  strphylo$tip.label <- tip_data[,1]
+  strphylo$tip.label <- tip_labels
+  strphylo$root.age <- ED[is.na(ED[,2]), 6]
   return(strphylo)
 }

@@ -7,9 +7,9 @@
 rstrphylo(
   n,
   d,
-  tip_data = cbind(1:n, 0, rep_len(1:d, n)),
   coalescent_rates = 1/effective_population_sizes,
   migration_matrix,
+  tip_data = cbind(1:n, 0, rep_len(1:d, n)),
   effective_population_sizes = 1/coalescent_rates
 )
 }
@@ -18,11 +18,11 @@ rstrphylo(
 
 \item{d}{Number of demes}
 
-\item{tip_data}{nx3 matrix with first column giving tip labels, second column giving tip ages and third column giving tip demes}
-
 \item{coalescent_rates}{Numeric vector giving coalescent rates (inverse effective population sizes) of each deme}
 
 \item{migration_matrix}{Numeric matrix giving backwards-in-t migration rates between each pair of demes}
+
+\item{tip_data}{nx3 matrix with first column giving tip labels, second column giving tip ages and third column giving tip demes}
 }
 \value{
 An object of class '\code{strphylo}'
