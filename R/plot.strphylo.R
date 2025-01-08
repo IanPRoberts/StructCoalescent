@@ -1,6 +1,6 @@
 #' @export
 
-plot.strphylo <- function (strphylo, n_deme = NA, time_axis = FALSE, root_time = NA,
+plot.strphylo <- function (strphylo, n_deme = NA, time_axis = FALSE, root_time = NA, color.palette=NULL,
                            ...){
   edge <- strphylo$edge
   if (is.na(n_deme)) {
@@ -12,10 +12,12 @@ plot.strphylo <- function (strphylo, n_deme = NA, time_axis = FALSE, root_time =
   # } else {
   #   color.palette <- c(palette.colors(n_deme, palette = 'Polychrome 36'), "black")
   # }
-  color.palette <- c(rainbow(n_deme), 'black')
+  if (is.null(color.palette)){
+    color.palette <- c(rainbow(n_deme), 'black')
+  }
   strphylo$node.deme[strphylo$node.deme == 0] <- n_deme + 1
   edge.color <- color.palette[strphylo$node.deme[edge[, 2]]]
-  ape::plot.phylo(strphylo, edge.color = edge.color, edge.width = 2,
+  ape::plot.phylo(strphylo, edge.color = edge.color,
        ...)
   if (time_axis) {
     if (is.na(root_time)) {

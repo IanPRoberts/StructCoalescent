@@ -14,15 +14,6 @@
 #' @export
 
 DTA_sampling <- function(strphylo, fit_mig_mat, N = 1, parallel = FALSE, mc.cores = NA){
-  if (N > 1){
-    if (parallel){
-      if (is.na(mc.cores)){
-        options(mc.cores = parallel::detectCores() /2)
-      }
-      options(mc.cores = mc.cores)
-    }
-  }
-
   fit_rates <- fit_mig_mat
   diag(fit_rates) <- 0
   diag(fit_rates) <- - rowSums(fit_rates)
@@ -75,7 +66,6 @@ DTA_sampling <- function(strphylo, fit_mig_mat, N = 1, parallel = FALSE, mc.core
         node_children_rows <- node_indices[node_children]
 
         node_dist <- apply(messages[node_children_rows, node_row,], 2, prod) #Product of root-wards child messages
-
         if (!is.na(proposal[node_row, 2])){ #Non-root coalescent node
           parent_row <- node_indices[proposal[node_row,2]]
           parent_deme <- proposal[parent_row, 5]
@@ -106,13 +96,23 @@ DTA_sampling <- function(strphylo, fit_mig_mat, N = 1, parallel = FALSE, mc.core
         }
       }
     }
+    class(proposal) <- 'ED'
     return(as.strphylo(proposal))
   }
 
-  if (parallel){
-    proposals <- parallel::mclapply(1:N, proposal_func)
+  if (N == 1){
+    return(proposal_func(1))
   } else {
-    proposals <- lapply(1:N, proposal_func)
+    if (parallel){
+      if (is.na(mc.cores)){
+        options(mc.cores = parallel::detectCores() /2)
+      } else {
+        options(mc.cores = mc.cores)
+      }
+      proposals <- parallel::mclapply(1:N, proposal_func)
+    } else {
+      proposals <- lapply(1:N, proposal_func)
+    }
   }
   return(proposals)
 }
