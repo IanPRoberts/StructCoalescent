@@ -91,6 +91,7 @@ master_xml <- function(coal_rate, bit_mig_mat, leaf_data, n_deme, xml_path, con 
 #' @param con A connection object or a character string giving the location for the output xml file (stdout() prints to console)
 #' @param run_name Name for logger files to be saved as
 #' @param priors either 'default' in which lognormal priors are used or 'gamma' in which gamma/inverse gamma priors are used (and prior parameters must be specified)
+#' @param proposal_rates Relative weights of proposal operators (migration rates update : effective population size updates : migration history updates )
 #'
 #' @return output file or file content on screen
 #'
@@ -100,6 +101,7 @@ MultiTypeTree_xml <- function(strphylo, n_deme, coal_rate, bit_mig_mat,
                            N=1e7, thin=1e3, migration_history_thin=thin,
                            con = stdout(), run_name = "$(filebase)",
                            priors = 'default',
+                           proposal_rates = c(1,1,1),
                            cr_shape=NULL, cr_rate=NULL,
                            mm_shape=NULL, mm_rate=NULL){
 
@@ -279,18 +281,18 @@ MultiTypeTree_xml <- function(strphylo, n_deme, coal_rate, bit_mig_mat,
         "\tid='RateScaler'",
         "\tparameter=\"@rateMatrix\"",
         "\tscaleFactor=\"0.8\"",
-        "\tweight=\"1\"/>\n",
+        paste0("\tweight=\"", proposal_rates[1], "\"/>\n"),
         "<!-- Effective population sizes scaler -->",
         "<operator spec='ScaleOperator'",
         "\tid='PopSizeScaler'",
         "\tparameter=\"@popSizes\"",
         "\tscaleFactor=\"0.8\"",
-        "\tweight=\"1\"/>\n",
+        paste0("\tweight=\"", proposal_rates[2], "\"/>\n"),
         "<!-- Node retype operator -->",
         "<operator",
         "\tspec=\"NodeRetype\"",
         "\tid=\"NR\"",
-        "\tweight=\"500\"",
+        paste0("\tweight=\"", proposal_rates[3], "\"\n"),
         "\tmultiTypeTree=\"@tree\"",
         "\tmigrationModel=\"@migModel\"/>\n",
         file=con,

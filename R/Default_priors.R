@@ -22,7 +22,11 @@ default_priors <- function(strphylo, n_deme, M=fitch(strphylo)$min_migs){
 
   prior_parameters <- c('cr_shape'=1,
                         'cr_rate'=coal_const / n_deme / (n_leaf - 1),
+                        'cr_mode'=0,
+                        'cr_var'= (n_deme * (n_leaf - 1) / coal_const),
                         'mm_shape'=1,
-                        'mm_rate'=(n_deme-1) * tree_length / M)
+                        'mm_rate'=(n_deme-1) * tree_length / M,
+                        'mm_mode'=0,
+                        'mm_var'=(M / tree_length / (n_deme-1))^2)
   return(prior_parameters)
 }

@@ -15,6 +15,7 @@ MultiTypeTree_xml(
   con = stdout(),
   run_name = "$(filebase)",
   priors = "default",
+  proposal_rates = c(1, 1, 1),
   cr_shape = NULL,
   cr_rate = NULL,
   mm_shape = NULL,
@@ -37,6 +38,8 @@ MultiTypeTree_xml(
 \item{run_name}{Name for logger files to be saved as}
 
 \item{priors}{either 'default' in which lognormal priors are used or 'gamma' in which gamma/inverse gamma priors are used (and prior parameters must be specified)}
+
+\item{proposal_rates}{Relative weights of proposal operators (migration rates update : effective population size updates : migration history updates )}
 
 \item{bit_mig_rate}{initial estimate for backward-in-time migration matrix}
 }

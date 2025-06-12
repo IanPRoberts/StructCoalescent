@@ -408,6 +408,8 @@ StructCoalescent_mcmc <- function(N,
   ED_NI <- NodeIndicesC(ED)
   n_deme <- max(ED[,5])
 
+  max_radius <- 2 * (max(ED[, 6 ]) - min(ED[, 6]))
+
 
   #Set NA prior variance to default prior variance
   if (is.na(cr_mode)) cr_mode <- 0
@@ -420,7 +422,7 @@ StructCoalescent_mcmc <- function(N,
   }
 
   if (is.na(mm_var)) mm_var <- (fitch(strphylo)$min_migs / ((n_deme-1) * sum(ED[,6] - ED[ED_NI[ED[,2]], 6], na.rm=TRUE)))^2
-  if (is.na(st_radius)) st_radius <- (max(ED[,6]) - min(ED[,6]))/10
+  if (is.na(st_radius)) st_radius <- max_radius / 20
 
   # Convert priors to rate-shape parameterisation from mode-variance
   cr_rate <- (cr_mode + sqrt(cr_mode^2 + 4 * cr_var))/(2 * cr_var)
@@ -526,7 +528,8 @@ StructCoalescent_mcmc <- function(N,
 
       if (adaptive){
         # Update proposal radius
-        st_radius <- exp(log(st_radius) + x^(-adaptation_rate) * (exp(log_AR) - target_accept_rate))
+        st_radius <- min(exp(log(st_radius) + x^(-adaptation_rate) * (exp(log_AR) - target_accept_rate)),
+                         max_radius)
       }
     } else {
       if (move_id == 2){

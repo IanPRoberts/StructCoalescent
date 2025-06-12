@@ -25,11 +25,14 @@ The goal of StructCoalescent is to perform Bayesian inference using the exact st
 You can install StructCoalescent from [GitHub](https://github.com/) with:
 
 ```{r gh-installation, eval = FALSE}
-# install.packages("devtools")
+if ( !require( devtools, quietly = TRUE ) ){
+  install.packages("devtools")
+}
 devtools::install_github("IanPRoberts/StructCoalescent")
+set.seed(1000)
 ```
 
-The package can be loaded using:
+The package can then be loaded using:
 
 ```{r}
 library(StructCoalescent)
@@ -37,7 +40,8 @@ library(StructCoalescent)
 
 ## Example {.tabset}
 
-This is a basic example of usage. First, we generate a heterochronous dated structured phylogenetic tree with $n=10$ leaves sampled between 2015 and 2020 from $d=3$ demes.
+This is a basic example of usage.
+First, we sample a heterochronous dated structured phylogenetic tree with $n=10$ leaves obtained from from $d=3$ demes between 2015 and 2020.
 
 ```{r rstrphylo}
 n <- 10
@@ -52,11 +56,56 @@ migration_matrix <- matrix(rexp(d^2, 20), d, d); diag(migration_matrix) <- 0
 strphylo <- rstrphylo(n, d, coalescent_rates, migration_matrix, leaf_data)
 plot(strphylo, time_axis=TRUE, root_time=strphylo$root.age, show.tip.label=TRUE)
 ```
+Our simulated phylogeny is returned as an object of class `strphylo` which can be passed directly into our MCMC algorithm as an initialisation point.
+Alternatively, we illustrate how to convert between a `strphylo` phylogeny and a BEAST-annotated Newick string using the `treeio` package.
 
-We can run $N=100,000$ MCMC algorithm taking this dated structured phylogeny as input with default prior distributions as follows (NOT RUN):
+A `strphylo` phylogeny can be converted to a Newick string via a treedata object as follows,
+
+```{r, NewickConversion}
+treedata <- treeio::as.treedata( strphylo )
+newick_string <- treeio::write.beast.newick( treedata )
+```
+
+resulting in a Newick string
+
+```{r, echo = FALSE }
+cat( newick_string )
+```
+
+We can then return from the annotated Newick string (with demes annotated by type) to our original `strphylo` object as follows
+```{r}
+treedata <- treeio::read.beast.newick(
+  textConnection( newick_string )
+)
+strphylo <- as.strphylo( treedata )
+```
+Note that we require `textConnection()` here to allow our Newick string (stored as a character vector) to be passed as a file connection into `read.beast.newick()`.
+Alternatively, a Newick string can be passed in from an external file using the path to the file.
+
+
+Now that we have a structured phylogeny in `strphylo` format to use for initialisation, we identify the prior parameters for use in our MCMC.
+To use our default prior distributions, we can either omit all prior parameters from our MCMC,
 
 ```{r MCMC, eval=FALSE}
+# NOT RUN
 StructCoalescent_mcmc(N=1e4, strphylo, coalescent_rates, migration_matrix, stdout_log=FALSE, thin=100, proposal_rates=c(20, 1, 1))
+```
+
+or we can pass prior parameters into the MCMC using in a mode-variance parameterisation of a Gamma distribution
+
+```{r}
+prior_parameters <- default_priors( strphylo, n_deme = 3, M = fitch( strphylo )$min_migs )
+```
+```{R, echo = FALSE }
+print( prior_parameters )
+```
+
+```{r MCMC2, eval = TRUE}
+# NOT RUN
+StructCoalescent_mcmc(N=1e4, strphylo, coalescent_rates, migration_matrix,
+                      cr_mode = 0, cr_var = 0.443212770,
+                      mm_mode = 0, mm_var = 0.001004854,
+                      stdout_log=FALSE, thin=100, proposal_rates=c(20, 1, 1))
 ```
 
 MCMC output consists of three files (by default added to current working directory `getwd()`):

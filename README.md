@@ -13,11 +13,14 @@ You can install StructCoalescent from [GitHub](https://github.com/)
 with:
 
 ``` r
-# install.packages("devtools")
+if ( !require( devtools, quietly = TRUE ) ){
+  install.packages("devtools")
+}
 devtools::install_github("IanPRoberts/StructCoalescent")
+set.seed(1000)
 ```
 
-The package can be loaded using:
+The package can then be loaded using:
 
 ``` r
 library(StructCoalescent)
@@ -25,9 +28,9 @@ library(StructCoalescent)
 
 ## Example
 
-This is a basic example of usage. First, we generate a heterochronous
-dated structured phylogenetic tree with $n=10$ leaves sampled between
-2015 and 2020 from $d=3$ demes.
+This is a basic example of usage. First, we sample a heterochronous
+dated structured phylogenetic tree with $n=10$ leaves obtained from from
+$d=3$ demes between 2015 and 2020.
 
 ``` r
 n <- 10
@@ -43,14 +46,68 @@ strphylo <- rstrphylo(n, d, coalescent_rates, migration_matrix, leaf_data)
 plot(strphylo, time_axis=TRUE, root_time=strphylo$root.age, show.tip.label=TRUE)
 ```
 
-<img src="man/figures/README-rstrphylo-1.png" width="100%" />
+<img src="man/figures/README-rstrphylo-1.png" width="100%" /> Our
+simulated phylogeny is returned as an object of class `strphylo` which
+can be passed directly into our MCMC algorithm as an initialisation
+point. Alternatively, we illustrate how to convert between a `strphylo`
+phylogeny and a BEAST-annotated Newick string using the `treeio`
+package.
 
-We can run $N=100,000$ MCMC algorithm taking this dated structured
-phylogeny as input with default prior distributions as follows (NOT
-RUN):
+A `strphylo` phylogeny can be converted to a Newick string via a
+treedata object as follows,
 
 ``` r
+treedata <- treeio::as.treedata( strphylo )
+newick_string <- treeio::write.beast.newick( treedata )
+```
+
+resulting in a Newick string
+
+    #> (((((((L1[&type=2]:1.307570019,L8[&type=2]:0.3075700191)[&type=2]:0.3614643143,L5[&type=2]:1.669034333)[&type=2]:1.425505973,(L6[&type=2]:1.054246555,L10[&type=2]:1.054246555)[&type=2]:0.04029375171)[&type=2]:3.50854755)[&type=1]:0.390826112,((L9[&type=1]:1.612581503,L4[&type=1]:0.6125815034)[&type=1]:0.3764541975,L2[&type=1]:1.989035701)[&type=1]:4.004878268)[&type=1]:0.6040162555)[&type=3]:0.1235585534,(L7[&type=3]:3.382411688,(L3[&type=1]:3.971524459)[&type=3]:0.410887229)[&type=3]:3.33907709)[&type=3];
+
+We can then return from the annotated Newick string (with demes
+annotated by type) to our original `strphylo` object as follows
+
+``` r
+treedata <- treeio::read.beast.newick(
+  textConnection( newick_string )
+)
+strphylo <- as.strphylo( treedata )
+```
+
+Note that we require `textConnection()` here to allow our Newick string
+(stored as a character vector) to be passed as a file connection into
+`read.beast.newick()`. Alternatively, a Newick string can be passed in
+from an external file using the path to the file.
+
+Now that we have a structured phylogeny in `strphylo` format to use for
+initialisation, we identify the prior parameters for use in our MCMC. To
+use our default prior distributions, we can either omit all prior
+parameters from our MCMC,
+
+``` r
+# NOT RUN
 StructCoalescent_mcmc(N=1e4, strphylo, coalescent_rates, migration_matrix, stdout_log=FALSE, thin=100, proposal_rates=c(20, 1, 1))
+```
+
+or we can pass prior parameters into the MCMC using in a mode-variance
+parameterisation of a Gamma distribution
+
+``` r
+prior_parameters <- default_priors( strphylo, n_deme = 3, M = fitch( strphylo )$min_migs )
+```
+
+    #>     cr_shape      cr_rate      cr_mode       cr_var     mm_shape      mm_rate 
+    #>  1.000000000  2.256252677  0.000000000  0.443212770  1.000000000 31.546311630 
+    #>      mm_mode       mm_var 
+    #>  0.000000000  0.001004854
+
+``` r
+# NOT RUN
+StructCoalescent_mcmc(N=1e4, strphylo, coalescent_rates, migration_matrix,
+                      cr_mode = 0, cr_var = 0.443212770,
+                      mm_mode = 0, mm_var = 0.001004854,
+                      stdout_log=FALSE, thin=100, proposal_rates=c(20, 1, 1))
 ```
 
 MCMC output consists of three files (by default added to current working
