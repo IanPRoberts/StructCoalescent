@@ -3,6 +3,10 @@
 .RData
 .Ruserdata
 *.Rprofvis
+*.Rproj
 src/*.o
 src/*.dll
 src/*.so
+
+.DS_store
+R/.DS_store
