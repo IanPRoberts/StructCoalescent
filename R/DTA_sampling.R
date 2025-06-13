@@ -77,7 +77,8 @@ DTA_sampling <- function(strphylo, fit_mig_mat, N = 1, parallel = FALSE, mc.core
 
       if (!is.na(proposal[node_row, 2])){ #Non-root nodes
         parent_row <- node_indices[proposal[node_row,2]] #Recalculate parent_row in case of leaf node
-        mig_path <- ECctmc::sample_path(proposal[parent_row, 5], proposal[node_row, 5], 0, edge_lengths[node_row], Q = fit_rates)
+        # mig_path <- ECctmc::sample_path(proposal[parent_row, 5], proposal[node_row, 5], 0, edge_lengths[node_row], Q = fit_rates)
+        mig_path <- sample_path(proposal[parent_row, 5], proposal[node_row, 5], 0, edge_lengths[node_row], Q = fit_rates)
         n_mig <- dim(mig_path)[1] - 2
 
         if (n_mig > 0){
