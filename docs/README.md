@@ -1,16 +1,7 @@
 ---
-output: github_document
+title: "README"
+output: html_document
 ---
-
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%"
-)
-set.seed(1000)
-```
 
 # StructCoalescent
 
@@ -40,4 +31,8 @@ library(StructCoalescent)
 
 ## Examples
 
-Further examples and documentation on how to use StructCoalescent are available [here](https://IanPRoberts.github.io/StructCoalescent/)
+Further examples and documentation on how to use StructCoalescent:
+
+1. [Converting phylogenetic trees](Converting_file_types.html)
+2. [Setting up MCMC](Setting_up_MCMC.html)
+3. Summarising MCMC results
