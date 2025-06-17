@@ -25,7 +25,7 @@ A paper describing the methods behind StructCoalescent has been published, see [
 
 ## Installation
 
-StructCoalescent can be installed from [GitHub](https://github.com/IanPRoberts/StructCoalescent) using devtools using:
+StructCoalescent can be installed from [GitHub](https://github.com/IanPRoberts/StructCoalescent) using devtools:
 
 ```{r gh-installation, eval = FALSE}
 if ( !require( devtools, quietly = TRUE ) ){
@@ -42,7 +42,4 @@ library(StructCoalescent)
 
 ## Examples
 
-Further examples and documentation on how to use StructCoalescent:
-
-1. [Importing phylogenetic trees](Converting_file_types.html)
-2. [Setting up MCMC](Setting_up_MCMC.html)
+Further examples and documentation on how to use StructCoalescent are available [here](https://IanPRoberts.github.io/StructCoalescent/)

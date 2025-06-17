@@ -71,7 +71,7 @@ prior_parameters <- default_priors( strphylo, n_deme = 3, M = fitch( strphylo )$
 print( prior_parameters )
 ```
 
-```{r MCMC2, eval = TRUE}
+```{r MCMC2, eval = FALSE}
 # NOT RUN
 StructCoalescent_mcmc(N=1e4, strphylo, coalescent_rates, migration_matrix,
                       cr_mode = 0, cr_var = 0.443212770,
