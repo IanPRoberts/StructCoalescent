@@ -10,3 +10,4 @@ src/*.so
 
 .DS_store
 R/.DS_store
+docs

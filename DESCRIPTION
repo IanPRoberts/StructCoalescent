@@ -13,3 +13,4 @@ Imports:
 LinkingTo: Rcpp, RcppArmadillo
 Encoding: UTF-8
 RoxygenNote: 7.3.2
+URL: https://ianproberts.github.io/StructCoalescent/
