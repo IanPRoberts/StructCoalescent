@@ -1,14 +1,10 @@
 ---
 title: "Basic MCMC Usage"
-<<<<<<<< HEAD:vignettes/Setting_up_MCMC.Rmd
-output: html_document
-========
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{SettingUpMCMC}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
->>>>>>>> 1-update-vignette-documentation:vignettes/SettingUpMCMC.Rmd
 ---
 
 ```{r, include = FALSE}

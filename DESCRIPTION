@@ -18,7 +18,3 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 URL: https://ianproberts.github.io/StructCoalescent/
-Suggests: 
-    knitr,
-    rmarkdown
-VignetteBuilder: knitr

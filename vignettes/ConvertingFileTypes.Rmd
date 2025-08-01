@@ -1,14 +1,10 @@
 ---
 title: "Importing Structured Phylogenetic Trees"
-<<<<<<<< HEAD:vignettes/Converting_file_types.Rmd
-output: html_document
-========
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{ConvertingFileTypes}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
->>>>>>>> 1-update-vignette-documentation:vignettes/ConvertingFileTypes.Rmd
 ---
 
 ```{r, include = FALSE}
