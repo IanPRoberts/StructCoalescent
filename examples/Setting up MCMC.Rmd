@@ -1,0 +1,9 @@
+---
+title: "Setting up MCMC"
+output: html_document
+---
+
+```{r}
+
+library( StructCoalescent )
+```
