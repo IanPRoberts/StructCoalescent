@@ -1,20 +1,29 @@
 ---
 title: "Basic MCMC Usage"
-output: html_document
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../docs") })
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SettingUpMCMC}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
-```{r}
-library( StructCoalescent )
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
 ```
 
-## Example {.tabset}
+```{r setup}
+library(StructCoalescent)
+```
+
+## Example
 
 This is a basic example of usage.
 First, we sample a heterochronous dated structured phylogenetic tree with $n=10$ leaves obtained from from $d=3$ demes between 2015 and 2020.
 
-```{r rstrphylo}
+```{r rstrphylo, out.width="100%"}
 n <- 10
 d <- 3
 leaf_data <- cbind('Leaf_ID'=paste0('L', 1:n),
@@ -27,6 +36,7 @@ migration_matrix <- matrix(rexp(d^2, 20), d, d); diag(migration_matrix) <- 0
 strphylo <- rstrphylo(n, d, coalescent_rates, migration_matrix, leaf_data)
 plot(strphylo, time_axis=TRUE, root_time=strphylo$root.age, show.tip.label=TRUE)
 ```
+
 Our simulated phylogeny is returned as an object of class `strphylo` which can be passed directly into our MCMC algorithm as an initialisation point.
 Alternatively, we illustrate how to convert between a `strphylo` phylogeny and a BEAST-annotated Newick string using the `treeio` package.
 
@@ -96,10 +106,10 @@ Evolutionary parameter samples can be presented in a variety of ways including t
 
 ### Trace plots
 
-```{r evolutionary-parameter-traces}
+```{r evolutionary-parameter-traces, eval=F}
 StructCoalescent_log <- read.csv('./StructCoalescent.log',
                                  header=TRUE)
-layout(matrix(1:d^2, d, d))
+# layout(matrix(1:d^2, d, d))
 for (col_id in 1:d){
   for (row_id in 1:d){
     if (col_id == row_id){
@@ -119,7 +129,7 @@ for (col_id in 1:d){
 
 ### Histograms
 
-```{r evolutionary-parameter-hists}
+```{r evolutionary-parameter-hists, eval=F}
 StructCoalescent_log <- read.csv('./StructCoalescent.log',
                                  header=TRUE)
 layout(matrix(1:d^2, d, d))

@@ -1,9 +1,22 @@
 ---
 title: "Importing Structured Phylogenetic Trees"
-output: html_document
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../docs") })
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ConvertingFileTypes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(StructCoalescent)
+```
 
 Phylogenetic trees can be stored in a wide range of data structures depending on their intended use.
 We have introduced a `strphylo` data structure to input and return phylogenetic trees in R
