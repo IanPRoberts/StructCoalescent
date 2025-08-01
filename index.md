@@ -9,17 +9,17 @@ A paper describing the methods behind StructCoalescent has been published, see [
 
 ## Installation
 
-StructCoalescent can be installed from [GitHub](https://github.com/IanPRoberts/StructCoalescent) using devtools using:
-
-```
+StructCoalescent can be installed from [GitHub](https://github.com/IanPRoberts/StructCoalescent) using:
+  
+``` r
 if ( !require( pak, quietly = TRUE ) ){
   install.packages("pak")
 }
-pak::pkg_install("IanPRoberts/StructCoalescent")
+pak::pak("IanPRoberts/StructCoalescent")
 ```
 
 and can then be loaded using
 
-```
+``` r
 library(StructCoalescent)
 ```
