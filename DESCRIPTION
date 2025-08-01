@@ -13,6 +13,10 @@ Imports:
 LinkingTo: Rcpp, RcppArmadillo
 Encoding: UTF-8
 RoxygenNote: 7.3.2
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
 URL: https://ianproberts.github.io/StructCoalescent/
 Suggests: 
     knitr,
