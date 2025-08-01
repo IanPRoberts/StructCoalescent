@@ -1,8 +1,6 @@
 ---
 title: "Importing Structured Phylogenetic Trees"
 output: html_document
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../docs") })
 ---
 
 Phylogenetic trees can be stored in a wide range of data structures depending on their intended use.

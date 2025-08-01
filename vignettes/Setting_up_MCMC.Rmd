@@ -1,8 +1,6 @@
 ---
 title: "Basic MCMC Usage"
 output: html_document
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../docs") })
 ---
 
 ```{r}
